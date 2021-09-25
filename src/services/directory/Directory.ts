@@ -1,10 +1,10 @@
 
 
-import path from 'path';
+import * as path from 'path';
 import {promises as fsp} from "fs"
 import fsExtra from 'fs-extra';
 import * as oldfs from "fs";
-import glob from 'glob';
+import * as glob from 'fast-glob';
 
 /**
  * Abstraction on top of given directory folder
@@ -148,24 +148,9 @@ export default class Directory {
      * @param globPattern 
      * @returns - returns array of the path relative to directory
      */
-    async findFileByPattern(globPattern: string): Promise<string[]>{
+    async findFileByPattern(globPattern: string ): Promise<string[]>{
 
-        return new Promise((res, rej) => {
-            
-            // options is optional
-            glob(this.path + '/' + globPattern, {}, (err, files) => {
-                
-                if(err){
-                    rej(err);
-                }
-
-                files = files.map((file) => {
-                    return path.relative(this.path, file);
-                });
-
-                res(files);
-            });
-        });
+        return (await glob(globPattern, {cwd: this.path }));
     }
 
     /**
@@ -193,8 +178,6 @@ export default class Directory {
      */
     async requreFile(filePath: string){
 
-        let parsed = path.parse(path.join(this.path, filePath));
-
-        return (await import(path.join(this.path, filePath)));
+        return require(path.join(this.path, filePath));
     }
 }

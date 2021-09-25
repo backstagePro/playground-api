@@ -1,0 +1,10 @@
+###
+# PROJECT IMPORT
+###
+
+POST http://localhost:3001/project/import HTTP/1.1
+content-type: application/json
+
+{
+    "projectPath": "/usr/src/playground-example-project"
+}

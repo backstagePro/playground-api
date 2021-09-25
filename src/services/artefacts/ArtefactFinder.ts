@@ -1,12 +1,12 @@
 import { SERVICE_ARTEFACT_FACTORY } from "../../services";
 import Directory from "../directory/Directory";
+import AbstractArtefact from "./artefact-types/AbstractArtefact";
 
 /**
  * Finds playground artefacts from given project
  */
 export default class ArtefactFinder {
-
-  private readonly ARTEFACTS_PATTERN = '**/*.playground.ts';
+  private readonly ARTEFACTS_PATTERN_SUB_DIR = '**/*.playground.ts'
 
   private directory: Directory;
 
@@ -22,18 +22,27 @@ export default class ArtefactFinder {
   /**
    * Find all artefacts in the system
    */
-  public async findAllArtefact(){
+  public async findAllArtefact(): Promise<{ [artefactType: string]: AbstractArtefact[]}> {
     
     // find all artefacts
-    let artefactsPaths = await this.directory.findFileByPattern(this.ARTEFACTS_PATTERN);
-    let artefactObjects = [];
+    let artefactsPaths = await this.directory.findFileByPattern(
+      this.ARTEFACTS_PATTERN_SUB_DIR
+    );
+
+    let artefactObjects = {};
 
     for (let index = 0; index < artefactsPaths.length; index++) {
       const path = artefactsPaths[index];
 
       let object = await this.produceArtefact( path );
+      
+      let type = object.getType();
 
-      artefactObjects.push(object?.getArtefactInfo());
+      if(artefactObjects[type] === void(0)){
+        artefactObjects[type] = [];
+      }
+
+      artefactObjects[type].push(object?.getArtefactInfo());
     }
 
     return artefactObjects;
@@ -49,7 +58,7 @@ export default class ArtefactFinder {
 
     let artefactData = (await this.directory.requreFile(artefactPath)).default;
 
-    return this.artefactFactory.createArtefact(artefactData);
+    return this.artefactFactory.createArtefact({ ...artefactData, $$artefactFilePath: artefactPath });
 
   }
 }

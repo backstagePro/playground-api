@@ -10,17 +10,26 @@ export interface IServiceArtefactConf extends IArtefact {
 
 export default class ServiceArtefact extends AbstractArtefact {
 
-  private params: IServiceArtefactConf;
+  private name: string;
+  private group: string;
+  private servicePath: string;
 
   constructor( params: IServiceArtefactConf){
     super(params);
 
-    this.params = params;
+    this.name = params.name;
+    this.group = params.group;
+    this.servicePath = params.servicePath;
   }
 
-  getArtefactInfo(){
-
-    return this.params;
+  public getArtefactInfo(){
+    
+    return { 
+      name: this.name,
+      group: this.group,
+      servicePath: this.servicePath, 
+      artefactFilePath: this.artefactFilePath 
+    };
   }
 
 }
