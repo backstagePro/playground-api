@@ -5,17 +5,6 @@ import ServiceLocator from '../services/ServiceLocator';
 
 let router = Router();
 
-router.get('/projects', async (req: Request, res: Response, next: NextFunction) => {
-
-  let projectRepository = (await ServiceLocator
-    .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
-
-  let allProjects = await (await projectRepository).listAll();
-
-  res.json({allProjects: allProjects});
-});
-
-
 router.post('/project/import', async (req: Request, res: Response, next: NextFunction) => {
 
   let projectPath = req.body.projectPath;
@@ -37,5 +26,29 @@ router.post('/project/import', async (req: Request, res: Response, next: NextFun
 
   res.json({artefacts: artefacts});
 });
+
+router.get('/projects', async (req: Request, res: Response, next: NextFunction) => {
+
+  let projectRepository = (await ServiceLocator
+    .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
+
+  let allProjects = await (await projectRepository).listAll();
+
+  res.json({allProjects: allProjects});
+});
+
+router.get('/projects/:id', async (req: Request, res: Response, next: NextFunction) => {
+
+  let id = req.params.id as string;
+
+
+  let projectRepository = await (await ServiceLocator
+    .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
+
+  let projectData = await projectRepository.findOne(id);
+
+  res.json({projectData: projectData});
+});
+
 
 export default router;
