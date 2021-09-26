@@ -54,4 +54,11 @@ export abstract class BaseRepository<T> implements IWrite<T>, IRead<T> {
 
     return item as T;
   }
+
+  async listAll(): Promise<T[]> {
+
+    let items = await this._collection.find({}).toArray();
+
+    return items as T[];
+  }
 }

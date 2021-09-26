@@ -1,7 +1,7 @@
 
-import * as express from 'express';
+import express from 'express';
 import ProjectRouter from './routes/ProjectRouter';
-import * as cors from 'cors';
+import cors from 'cors';
 
 const app = express();
 const port = 3001;

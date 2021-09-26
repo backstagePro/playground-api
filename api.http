@@ -8,3 +8,7 @@ content-type: application/json
 {
     "projectPath": "/usr/src/playground-example-project"
 }
+
+###
+GET http://localhost:3001/projects HTTP/1.1
+content-type: application/json

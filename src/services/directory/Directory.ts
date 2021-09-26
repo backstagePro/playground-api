@@ -4,7 +4,7 @@ import * as path from 'path';
 import {promises as fsp} from "fs"
 import fsExtra from 'fs-extra';
 import * as oldfs from "fs";
-import * as glob from 'fast-glob';
+import glob from 'fast-glob';
 
 /**
  * Abstraction on top of given directory folder

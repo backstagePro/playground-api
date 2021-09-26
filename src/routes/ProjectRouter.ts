@@ -5,9 +5,14 @@ import ServiceLocator from '../services/ServiceLocator';
 
 let router = Router();
 
-router.get('/projects', (req: Request, res: Response, next: NextFunction) => {
+router.get('/projects', async (req: Request, res: Response, next: NextFunction) => {
 
-  res.json({projects: []});
+  let projectRepository = (await ServiceLocator
+    .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
+
+  let allProjects = await (await projectRepository).listAll();
+
+  res.json({allProjects: allProjects});
 });
 
 

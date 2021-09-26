@@ -10,6 +10,22 @@
       "name": "Attach to node debugger",
       "remoteRoot": "/usr/src/app",
       "port": 9229
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Jest",
+      "runtimeArgs": [
+        "--inspect"
+      ],
+      "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+      "args": [
+          "--watchAll",
+          "--no-cache"
+      ],
+       "skipFiles": [
+        "<node_internals>/**/*.js", "node_modules",
+      ]
     }
   ]
 }

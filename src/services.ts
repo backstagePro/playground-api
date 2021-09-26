@@ -5,6 +5,7 @@ import ArtefactFinder from "./services/artefacts/ArtefactFinder";
 import MongoDbAdapter from "./services/db/MongoDbAdapter";
 import DirectoryManager from "./services/directory/DirectoryManager";
 import ProjectLoader from "./services/ProjectLoader";
+import TransformerFactory from "./services/ts-compiler/TransformerFactory";
 
 /**
  * Service used for loading the project into the system.
@@ -116,4 +117,17 @@ export type SERVICE_ARTEFACT_FACTORY = ArtefactFactory;
 ServiceLocator.set(SERVICE_ARTEFACT_FACTORY, async () => {
     
     return new ArtefactFactory();
+});
+
+
+/**
+ * Used to create artefacts 
+ *
+ */
+export let SERVICE_TRANSFORMER_FACTORY: 'SERVICE_TRANSFORMER_FACTORY' = 'SERVICE_TRANSFORMER_FACTORY';
+export type SERVICE_TRANSFORMER_FACTORY = TransformerFactory;
+
+ServiceLocator.set(SERVICE_TRANSFORMER_FACTORY, async () => {
+    
+    return new TransformerFactory();
 });
