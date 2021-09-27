@@ -36,20 +36,20 @@ export default class ArtefactFinder {
 
       let object = await this.produceArtefact( path );
       
-      let type = object.getType();
+      let group = object.getGroup();
 
-      if(artefactObjects[type] === void(0)){
-        artefactObjects[type] = [];
+      if(artefactObjects[group] === void(0)){
+        artefactObjects[group] = [];
       }
 
-      artefactObjects[type].push(object?.getArtefactInfo());
+      artefactObjects[group].push(object?.getArtefactInfo());
     }
 
     return artefactObjects;
   }
 
   /**
-   * Create an artefact from given type
+   * Create an artefact from given group
    * 
    * @param artefactPath 
    * @returns 

@@ -12,3 +12,8 @@ content-type: application/json
 ###
 GET http://localhost:3001/projects HTTP/1.1
 content-type: application/json
+
+###
+
+DELETE  http://localhost:3001/project/delete/ HTTP/1.1
+content-type: application/json

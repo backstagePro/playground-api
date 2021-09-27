@@ -7,48 +7,84 @@ let router = Router();
 
 router.post('/project/import', async (req: Request, res: Response, next: NextFunction) => {
 
-  let projectPath = req.body.projectPath;
-
-  let artefactFinder = await ServiceLocator
-    .get<SERVICE_ARTEFACT_FINDER, SERVICE_ARTEFACT_FINDER_PARAMS>(SERVICE_ARTEFACT_FINDER, {
-    projectPath 
-  });
+  try {
+    
+    let projectPath = req.body.projectPath;
   
-  let projectRepository = (await ServiceLocator
-    .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
+    let artefactFinder = await ServiceLocator
+      .get<SERVICE_ARTEFACT_FINDER, SERVICE_ARTEFACT_FINDER_PARAMS>(SERVICE_ARTEFACT_FINDER, {
+      projectPath 
+    });
+    
+    let projectRepository = (await ServiceLocator
+      .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
+  
+    // extract all artefacts from the project
+    let artefacts = await artefactFinder.findAllArtefact();
+  
+    let project = new Project({ path: projectPath, artefacts });
+  
+    await (await projectRepository).create(project);
+  
+    res.json({ project , artefacts: artefacts });
+  } catch(e){
 
-  // extract all artefacts from the project
-  let artefacts = await artefactFinder.findAllArtefact();
+    next(e);
+  }
 
-  let project = new Project({ path: projectPath, artefacts });
-
-  await (await projectRepository).create(project);
-
-  res.json({artefacts: artefacts});
 });
 
 router.get('/projects', async (req: Request, res: Response, next: NextFunction) => {
 
-  let projectRepository = (await ServiceLocator
-    .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
-
-  let allProjects = await (await projectRepository).listAll();
-
-  res.json({allProjects: allProjects});
+  try {
+    let projectRepository = (await ServiceLocator
+      .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
+  
+    let allProjects = await (await projectRepository).listAll();
+  
+    res.json({allProjects: allProjects});
+    
+  } catch (e){
+    next(e);
+  }
 });
 
 router.get('/projects/:id', async (req: Request, res: Response, next: NextFunction) => {
 
-  let id = req.params.id as string;
+  try {
+    let id = req.params.id as string;
+  
+    let projectRepository = await (await ServiceLocator
+      .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
+  
+    let projectData = await projectRepository.findOne(id);
+  
+    res.json({projectData: projectData});
 
+  } catch(e){
 
-  let projectRepository = await (await ServiceLocator
-    .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
-
-  let projectData = await projectRepository.findOne(id);
-
-  res.json({projectData: projectData});
+    next(e);
+  }
 });
+
+
+router.delete('/project/delete/:id', async (req: Request, res: Response, next: NextFunction) => {
+
+  try {
+    let id = req.params.id as string;
+  
+    let projectRepository = await (await ServiceLocator
+      .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
+  
+    await projectRepository.delete(id);
+  
+    res.json({succeess: true});
+
+  } catch(e){
+
+    next(e);
+  }
+})
 
 
 export default router;

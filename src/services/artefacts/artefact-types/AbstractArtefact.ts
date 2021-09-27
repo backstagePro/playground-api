@@ -2,9 +2,9 @@
 export interface IArtefact {
 
   /**
-   * The type of the artefact
+   * The group of the artefact
    */
-  type:string;
+  group: string;
 
   /**
    * The path to artefact file in the project
@@ -15,19 +15,19 @@ export interface IArtefact {
 
 export default abstract class AbstractArtefact {
 
-  protected type: string;
+  protected group: string;
 
   protected artefactFilePath: string;
 
   constructor(params: IArtefact){
     this.artefactFilePath = params.$$artefactFilePath;
-    this.type = params.type;
+    this.group = params.group;
   }
 
   abstract getArtefactInfo(): any;
 
-  public getType(): string {
+  public getGroup(): string {
 
-    return this.type
+    return this.group
   }
 }

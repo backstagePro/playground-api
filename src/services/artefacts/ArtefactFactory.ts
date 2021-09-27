@@ -6,10 +6,11 @@ export default class ArtefactFactory {
 
   createArtefact( artefactConf: any ){
 
-    if(artefactConf.type === ARTEFACT_SERVICE){
+    if(artefactConf.group === ARTEFACT_SERVICE){
       return new ServiceArtefact(artefactConf);
     }
 
+    throw new Error(`Missing artefact of group : ${artefactConf.group}`);
     return null;
   }
 }
