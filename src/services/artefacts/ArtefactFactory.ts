@@ -1,16 +1,24 @@
+import { SERVICE_ID_GENERATOR } from "../../services";
 import { IArtefact } from "./artefact-types/AbstractArtefact";
 import ServiceArtefact, { ARTEFACT_SERVICE } from "./artefact-types/ServiceArtefact";
 
 export default class ArtefactFactory {
- 
+    
+    private idGenerator: SERVICE_ID_GENERATOR;
 
-  createArtefact( artefactConf: any ){
+    constructor(idGenerator: SERVICE_ID_GENERATOR){
 
-    if(artefactConf.group === ARTEFACT_SERVICE){
-      return new ServiceArtefact(artefactConf);
+        this.idGenerator = idGenerator;
     }
 
-    throw new Error(`Missing artefact of group : ${artefactConf.group}`);
-    return null;
-  }
+    createArtefact( artefactConf: any ){
+
+        if(artefactConf.group === ARTEFACT_SERVICE){
+            return new ServiceArtefact(artefactConf, {
+                idGenerator: this.idGenerator
+            });
+        }
+
+        throw new Error(`Missing artefact of group : ${artefactConf.group}`);
+    }
 }

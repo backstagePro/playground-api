@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { SERVICE_ID_GENERATOR } from '../../../services';
 
 export interface IArtefact {
 
@@ -14,6 +15,10 @@ export interface IArtefact {
 
 }
 
+export interface IDeps {
+    idGenerator: SERVICE_ID_GENERATOR
+}
+
 export default abstract class AbstractArtefact {
 
   protected group: string;
@@ -22,10 +27,14 @@ export default abstract class AbstractArtefact {
 
   protected artefactFilePath: string;
 
-  constructor(params: IArtefact){
+  protected idGenerator: SERVICE_ID_GENERATOR;
+
+  constructor(params: IArtefact, deps: IDeps){
+    
     this.artefactFilePath = params.$$artefactFilePath;
     this.group = params.group;
-    this.id = crypto.randomBytes(20).toString('hex');
+    this.idGenerator = deps.idGenerator;
+    this.id = this.idGenerator.generateId();
   }
 
   abstract getArtefactInfo(): any;
