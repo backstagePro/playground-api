@@ -12,7 +12,6 @@ app.use(cors());
 // routing
 app.use(ProjectRouter);
 
-
 app.listen(port, () => {
   console.log(`Playground api listening at http://localhost:${port}`)
 });
