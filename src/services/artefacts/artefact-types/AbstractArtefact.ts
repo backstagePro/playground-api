@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 
 export interface IArtefact {
 
@@ -17,11 +18,14 @@ export default abstract class AbstractArtefact {
 
   protected group: string;
 
+  protected id: string;
+
   protected artefactFilePath: string;
 
   constructor(params: IArtefact){
     this.artefactFilePath = params.$$artefactFilePath;
     this.group = params.group;
+    this.id = crypto.randomBytes(20).toString('hex');
   }
 
   abstract getArtefactInfo(): any;

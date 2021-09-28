@@ -23,6 +23,7 @@ export default class ServiceArtefact extends AbstractArtefact {
   public getArtefactInfo(){
     
     return { 
+      id: this.id,
       name: this.name,
       group: this.group,
       servicePath: this.servicePath, 
