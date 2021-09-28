@@ -78,7 +78,7 @@ router.delete('/project/delete/:id', async (req: Request, res: Response, next: N
   
     await projectRepository.delete(id);
   
-    res.json({succeess: true});
+    res.json({ succeess: true });
 
   } catch(e){
 
