@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { IRun } from '../../../model/entities/Run';
 import { SERVICE_ID_GENERATOR } from '../../../services';
 
 export interface IArtefact {
@@ -37,6 +38,14 @@ export default abstract class AbstractArtefact {
     this.id = this.idGenerator.generateId();
   }
 
+  /**
+   * If artefact has a "runs", return runs, otherwise - return false
+   */
+  abstract getRuns(): IRun[];
+
+  /**
+   * Returns base artefact info
+   */
   abstract getArtefactInfo(): any;
 
   /**

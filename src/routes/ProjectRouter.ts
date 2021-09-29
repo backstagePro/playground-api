@@ -1,5 +1,8 @@
 import { Router, Request, Response, NextFunction} from 'express';
 import Project from '../model/entities/Project';
+import ArtefactRepository from '../model/repositories/ArtefactRepository';
+import ProjectRepository from '../model/repositories/ProjectRepository';
+import RunRepository from '../model/repositories/RunRepository';
 import { SERVICE_ARTEFACT_FINDER, SERVICE_ARTEFACT_FINDER_PARAMS, SERVICE_REPOSITORY_FACTORY } from '../services';
 import ServiceLocator from '../services/ServiceLocator';
 
@@ -16,17 +19,29 @@ router.post('/project/import', async (req: Request, res: Response, next: NextFun
       projectPath 
     });
     
-    let projectRepository = (await ServiceLocator
+    let projectRepository = await (await ServiceLocator
       .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
+  
+    let artefactRepository = await (await ServiceLocator
+        .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('artefact');
+    
+    let runRepository = await (await ServiceLocator
+        .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('run');
+        
   
     // extract all artefacts from the project
     let artefacts = await artefactFinder.findAllArtefact();
   
-    let project = new Project({ path: projectPath, artefacts });
+    // create a project record
+    let projectId = await projectRepository.create(new Project({path: projectPath}));
+
+    await (artefactRepository as ArtefactRepository).importArtefacts(artefacts, projectId);
   
-    await (await projectRepository).create(project);
-  
-    res.json({ project , artefacts: artefacts });
+    res.json({ 
+        project: {}, 
+        artefacts: {},
+        runs: {}
+    });
   } catch(e){
 
     next(e);
@@ -55,11 +70,13 @@ router.get('/projects/:id', async (req: Request, res: Response, next: NextFuncti
     let id = req.params.id as string;
   
     let projectRepository = await (await ServiceLocator
-      .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');
+      .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');  
+
+    let fullProjectData = (projectRepository as ProjectRepository).collectProjectInfo(id);
   
-    let projectData = await projectRepository.findOne(id);
-  
-    res.json({projectData: projectData});
+    res.json({
+        projectData: fullProjectData
+    });
 
   } catch(e){
 

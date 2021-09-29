@@ -12,7 +12,7 @@ export default class ServiceArtefact extends AbstractArtefact {
 
   private name: string;
   private servicePath: string;
-  private runs: {[id: string]: { name: string, run: any, id: string }};
+  private runs: { name: string, run: any, id: string }[];
 
   constructor( params: IServiceArtefactConf, deps:IDeps){
     super(params, deps);
@@ -21,24 +21,24 @@ export default class ServiceArtefact extends AbstractArtefact {
     this.group = params.group;
     this.servicePath = params.servicePath;
 
-    this.runs = {};
+    debugger;
 
-    params.run.forEach((_run) => {
-        let id = this.idGenerator.generateId();
-         
-        this.runs[id] = {..._run, id };
-    });
+    this.runs = params.run;
+  }
+
+  public getRuns(){
+
+    return this.runs;
   }
 
   public getArtefactInfo(){
     
     return { 
-      id: this.id,
-      name: this.name,
-      group: this.group,
-      servicePath: this.servicePath, 
-      artefactFilePath: this.artefactFilePath,
-      runs: this.runs
+        id: this.id,
+        name: this.name,
+        group: this.group,
+        servicePath: this.servicePath, 
+        artefactFilePath: this.artefactFilePath
     };
   }
 

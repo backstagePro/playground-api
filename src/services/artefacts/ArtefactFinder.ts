@@ -1,6 +1,6 @@
-import { IArtefact } from "../../model/entities/Project";
 import { SERVICE_ARTEFACT_FACTORY } from "../../services";
 import Directory from "../directory/Directory";
+import AbstractArtefact from "./artefact-types/AbstractArtefact";
 
 /**
  * Finds playground artefacts from given project
@@ -22,23 +22,23 @@ export default class ArtefactFinder {
   /**
    * Find all artefacts in the system
    */
-  public async findAllArtefact(): Promise<{ [artefactId: string]: IArtefact[]}> {
+  public async findAllArtefact(): Promise<AbstractArtefact[]> {
     
     // find all artefacts
+    // all artefacts inherit AbstractArtefact
     let artefactsPaths = await this.directory.findFileByPattern(
       this.ARTEFACTS_PATTERN_SUB_DIR
     );
 
-    let artefactObjects = {};
+    let artefactObjects = [];
 
     for (let index = 0; index < artefactsPaths.length; index++) {
       const path = artefactsPaths[index];
 
-      let object = await this.produceArtefact( path );
+      // create instance of the artefact
+      let artInstance = await this.produceArtefact( path );
       
-      let id = object.getId();
-
-      artefactObjects[id] = object?.getArtefactInfo();
+      artefactObjects.push(artInstance);
     }
 
     return artefactObjects;
