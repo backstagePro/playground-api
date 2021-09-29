@@ -72,7 +72,7 @@ router.get('/projects/:id', async (req: Request, res: Response, next: NextFuncti
     let projectRepository = await (await ServiceLocator
       .get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)).getRepository('project');  
 
-    let fullProjectData = (projectRepository as ProjectRepository).collectProjectInfo(id);
+    let fullProjectData = await (projectRepository as ProjectRepository).collectProjectInfo(id);
   
     res.json({
         projectData: fullProjectData

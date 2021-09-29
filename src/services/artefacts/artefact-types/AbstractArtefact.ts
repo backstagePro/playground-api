@@ -24,8 +24,6 @@ export default abstract class AbstractArtefact {
 
   protected group: string;
 
-  protected id: string;
-
   protected artefactFilePath: string;
 
   protected idGenerator: SERVICE_ID_GENERATOR;
@@ -35,7 +33,6 @@ export default abstract class AbstractArtefact {
     this.artefactFilePath = params.$$artefactFilePath;
     this.group = params.group;
     this.idGenerator = deps.idGenerator;
-    this.id = this.idGenerator.generateId();
   }
 
   /**
@@ -48,6 +45,11 @@ export default abstract class AbstractArtefact {
    */
   abstract getArtefactInfo(): any;
 
+  public getArtefactFilePath(){
+
+    return this.artefactFilePath;
+  }
+
   /**
    * Returns artefact group
    * 
@@ -56,15 +58,5 @@ export default abstract class AbstractArtefact {
   public getGroup(): string {
 
     return this.group
-  }
-
-  /**
-   * Returns artefact id
-   * 
-   * @returns 
-   */
-  public getId(){
-
-    return this.id;
   }
 }

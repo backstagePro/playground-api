@@ -17,10 +17,12 @@ export default class ArtefactRepository extends BaseRepository<Artefact> {
     
     for (let index = 0; index < artefacts.length; index++) {
         const art = artefacts[index];
-        
-        let info = {...art.getArtefactInfo(), projectId };
 
-        let artefactId = await this.create(new Artefact(info));
+        debugger;
+        
+        let info = { projectId, group: art.getGroup(), path: art.getArtefactFilePath() };
+
+        let artefactId = await this.create(new Artefact(info, art.getArtefactInfo()));
 
         if(art.getRuns()){
             let runs = art.getRuns();

@@ -25,7 +25,6 @@ export default class ProjectRepository extends BaseRepository<Project> {
         runs = runs.concat(_runs);
     }
     
-    debugger;
     return {
         project, artefacts, runs
     }
