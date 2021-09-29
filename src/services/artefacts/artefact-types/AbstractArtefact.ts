@@ -39,8 +39,23 @@ export default abstract class AbstractArtefact {
 
   abstract getArtefactInfo(): any;
 
+  /**
+   * Returns artefact group
+   * 
+   * @returns 
+   */
   public getGroup(): string {
 
     return this.group
+  }
+
+  /**
+   * Returns artefact id
+   * 
+   * @returns 
+   */
+  public getId(){
+
+    return this.id;
   }
 }
