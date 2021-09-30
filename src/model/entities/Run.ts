@@ -1,11 +1,12 @@
 
 export interface IRun {
     name: string;
+    artefactId: string;
 }
 
 interface IRunParams {
     run: IRun, 
-    artefactId: string
+    artefactId: string;
 }
 
 export default class Run {

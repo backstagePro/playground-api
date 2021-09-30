@@ -1,3 +1,8 @@
+export interface IProject {
+  _id: string;
+  path: string
+}
+
 export interface IProjectParams {
   path: string
   _id?: string

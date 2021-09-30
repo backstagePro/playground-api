@@ -7,6 +7,7 @@ import DirectoryManager from "./services/directory/DirectoryManager";
 import ProjectLoader from "./services/ProjectLoader";
 import TransformerFactory from "./services/ts-compiler/TransformerFactory";
 import IdGenerator from "./services/IdGenerator";
+import RunGenerator from "./services/run/RunGenerator";
 
 /**
  * Service used for loading the project into the system.
@@ -124,7 +125,7 @@ ServiceLocator.set(SERVICE_ARTEFACT_FACTORY, async () => {
 
 
 /**
- * Used to create artefacts 
+ * Used to for AST Analysis
  *
  */
 export let SERVICE_TRANSFORMER_FACTORY: 'SERVICE_TRANSFORMER_FACTORY' = 'SERVICE_TRANSFORMER_FACTORY';
@@ -145,4 +146,20 @@ export type SERVICE_ID_GENERATOR = IdGenerator;
 ServiceLocator.set(SERVICE_ID_GENERATOR, async () => {
     
     return new IdGenerator();
+});
+
+
+/**
+ * Creates run session
+ *
+ */
+export let SERVICE_RUN_GENERATOR: 'SERVICE_RUN_GENERATOR' = 'SERVICE_RUN_GENERATOR';
+export type SERVICE_RUN_GENERATOR = RunGenerator;
+
+ServiceLocator.set(SERVICE_RUN_GENERATOR, async () => {
+    
+    return new RunGenerator(
+        (await ServiceLocator.get<SERVICE_TRANSFORMER_FACTORY>(SERVICE_TRANSFORMER_FACTORY)),
+        (await ServiceLocator.get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY))
+    );
 });

@@ -1,4 +1,13 @@
 
+export interface IArtefact {
+    _id : string,
+    group : string,
+    projectId : string,
+    path : string,
+    name : string,
+    servicePath : string,
+    artefactFilePath : string
+}
 
 interface IArtParams {
     group: string;

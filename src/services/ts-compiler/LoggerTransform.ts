@@ -3,7 +3,14 @@ import AstTsTransformer from "./AstTsTransformer";
 
 export default class LoggerTransform extends AstTsTransformer {
 
+  /**
+   * Add logs to file 
+   * 
+   * @returns 
+   */
   public addLogs(){
+
+    this.printAllChildren(this.getSourceFile());
 
     return this.trasform((node, context) => {
 
