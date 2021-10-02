@@ -8,15 +8,13 @@ export default class LoggerTransform extends AstTsTransformer {
    * 
    * @returns 
    */
-  public addLogs(){
-
-    this.printAllChildren(this.getSourceFile());
+  public addLogs(identifier: string) : string {
 
     return this.trasform((node, context) => {
 
       if(ts.isVariableStatement(node) || ts.isExpressionStatement(node)){
   
-        let result = this.findFirstChild(node, (_node) => {
+        let identNode = this.findFirstChild(node, (_node) => {
   
           if(ts.isIdentifier(_node)){
             return true;
@@ -28,20 +26,50 @@ export default class LoggerTransform extends AstTsTransformer {
         return [
           node, // orignal node  
   
-          context.factory.createCallExpression( // log node
-            context.factory.createPropertyAccessExpression(
-              context.factory.createIdentifier("console"),
-              context.factory.createIdentifier("log")
-            ),
+          context.factory.createExpressionStatement(context.factory.createCallExpression(
+            context.factory.createIdentifier("__show__dada"),
             undefined,
-            [context.factory.createIdentifier(result.getText())]
-          )
+            [context.factory.createObjectLiteralExpression(
+              [
+                context.factory.createPropertyAssignment(
+                  context.factory.createIdentifier("id"),
+                  context.factory.createStringLiteral(identNode.getText().trim())
+                ),
+                context.factory.createPropertyAssignment(
+                  context.factory.createIdentifier("val"),
+                  context.factory.createIdentifier(identNode.getText().trim())
+                )
+              ],
+              false
+            )]
+          ))
         ];
       }
   
       return node;
     }, 
     { printProgram: true }
-    );
+    ) as string;
+  }
+
+  /**
+   * 
+   * Replace  __show__<id>({ id: "b", val: b }) with <%= b %>
+   * 
+   * @param program
+   * @param id 
+   * @returns 
+   */
+  public getReplacedProgram(program: string, id: string){
+
+
+    return program.replace(new RegExp(`__show__${id}\((.*)\)`, 'gi'), function(a, b, c, d){
+
+        const jsonData = b.substring(1, b.length-2);
+
+        const match = /id: "(.*)"/.exec(jsonData);
+
+        return `<%= ${match[1]} %>`;
+    })
   }
 }

@@ -248,10 +248,15 @@ export default class AstTsTransformer {
     return transformationResult.transformed[0];
   }
 
-  public printAllChildren(node: ts.Node, depth = 0) {
-      console.log(new Array(depth+1).join('----'), ts.SyntaxKind[node.kind], node.getText());
-      depth++;
-      node.getChildren().forEach(c=> this.printAllChildren(c, depth));
+  public forEachChild(node: ts.Node, cb: (node: ts.Node, depth: number) => void, depth = 0) {
+
+    cb(node, depth);
+
+    
+    depth++;
+
+
+    node.getChildren().forEach(c=> this.forEachChild(c, cb, depth));
   }
 
   /**

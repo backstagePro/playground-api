@@ -58,8 +58,6 @@ export default class RunGenerator {
     let fullPathToRun = path.join(project.path, artefact.path);
     let fullPathToService = path.resolve( path.dirname(path.join(project.path, artefact.path)), artefact.servicePath);
 
-    debugger;
-
     // clone the files 
     await this.processFile(fullPathToService);
 
@@ -70,16 +68,15 @@ export default class RunGenerator {
 
     // get transformer
 
-
-    debugger;
-
     const transformerFactory = await ServiceLocator.get<SERVICE_TRANSFORMER_FACTORY>(SERVICE_TRANSFORMER_FACTORY)
 
     let loggerTransformer = transformerFactory.getTransformer('logger', {filePath: fullPath});
 
-    let modifiedFile = loggerTransformer.addLogs();
+    let modifiedFile = loggerTransformer.addLogs('dada');
 
-    debugger;
+    let replacedOutput = loggerTransformer.getReplacedProgram(modifiedFile, 'dada');
+
+    console.log('replacedOutput', replacedOutput);
 
   }
 }
