@@ -8,6 +8,9 @@ import ProjectLoader from "./services/ProjectLoader";
 import TransformerFactory from "./services/ts-compiler/TransformerFactory";
 import IdGenerator from "./services/IdGenerator";
 import RunGenerator from "./services/run/RunGenerator";
+import ShellService from "./services/ShellService";
+import RunServer from "./services/run-service/RunServer";
+import WebsocketServer from "./services/ws/WebsocketServer";
 
 /**
  * Service used for loading the project into the system.
@@ -150,7 +153,7 @@ ServiceLocator.set(SERVICE_ID_GENERATOR, async () => {
 
 
 /**
- * Creates run session
+ * Creates run session 
  *
  */
 export let SERVICE_RUN_GENERATOR: 'SERVICE_RUN_GENERATOR' = 'SERVICE_RUN_GENERATOR';
@@ -163,3 +166,45 @@ ServiceLocator.set(SERVICE_RUN_GENERATOR, async () => {
         (await ServiceLocator.get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY))
     );
 });
+
+
+/**
+ * Run shell command 
+ *
+ */
+export let SERVICE_SHELL: 'SERVICE_SHELL' = 'SERVICE_SHELL';
+export type SERVICE_SHELL = ShellService;
+export type SERVICE_SHELL_PARAMS = {
+    command: string;
+}
+
+ServiceLocator.set(SERVICE_SHELL, async (params: SERVICE_SHELL_PARAMS) => {
+    
+    return new ShellService(params.command);
+}, { singleton: false });
+
+/**
+ * Used to generate a servers for the runs 
+ *
+ */
+export let SERVICE_RUN_SERVER: 'SERVICE_RUN_SERVER' = 'SERVICE_RUN_SERVER';
+export type SERVICE_RUN_SERVER = RunServer;
+
+ServiceLocator.set(SERVICE_RUN_SERVER, async () => {
+    
+    return new RunServer();
+});
+
+/**
+ * Creates a websocket server 
+ *
+ */
+export let SERVICE_WEBSOCKET_SERVER: 'SERVICE_WEBSOCKET_SERVER' = 'SERVICE_WEBSOCKET_SERVER';
+export type SERVICE_WEBSOCKET_SERVER = WebsocketServer;
+
+ServiceLocator.set(SERVICE_WEBSOCKET_SERVER, async () => {
+    
+    return new WebsocketServer();
+});
+
+

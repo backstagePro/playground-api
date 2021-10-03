@@ -2,7 +2,7 @@
 import { IArtefact } from "../../model/entities/Artefact";
 import { IProject } from "../../model/entities/Project";
 import { IRun } from "../../model/entities/Run";
-import { SERVICE_REPOSITORY_FACTORY, SERVICE_TRANSFORMER_FACTORY } from "../../services";
+import { SERVICE_REPOSITORY_FACTORY, SERVICE_SHELL, SERVICE_SHELL_PARAMS, SERVICE_TRANSFORMER_FACTORY } from "../../services";
 import path from 'path';
 import ServiceLocator from "../ServiceLocator";
 
@@ -14,7 +14,7 @@ export default class RunGenerator {
 
   constructor( 
     transofrmerFactory: SERVICE_TRANSFORMER_FACTORY,
-    repositoryFactory: SERVICE_REPOSITORY_FACTORY
+    repositoryFactory: SERVICE_REPOSITORY_FACTORY,
   ){
 
     this.transofrmerFactory = transofrmerFactory;
@@ -49,6 +49,13 @@ export default class RunGenerator {
     return run;
   }
 
+  /**
+   * Generate run server in the directory of the project
+   */
+  public async generateRunServer(projectPath: string){
+
+  }
+
   public async startRunSession(runId: string) {
 
     const run: IRun = await this.getRun(runId);
@@ -58,16 +65,17 @@ export default class RunGenerator {
     let fullPathToRun = path.join(project.path, artefact.path);
     let fullPathToService = path.resolve( path.dirname(path.join(project.path, artefact.path)), artefact.servicePath);
 
+    const fileMap = [];
+
     // clone the files 
-    await this.processFile(fullPathToService);
+    await this.processFile(fullPathToService, fileMap);
 
-
+    return fileMap;
   }
 
-  public async processFile( fullPath: string ) {
+  public async processFile( fullPath: string, fileMap ) {
 
     // get transformer
-
     const transformerFactory = await ServiceLocator.get<SERVICE_TRANSFORMER_FACTORY>(SERVICE_TRANSFORMER_FACTORY)
 
     let loggerTransformer = transformerFactory.getTransformer('logger', {filePath: fullPath});
@@ -76,7 +84,25 @@ export default class RunGenerator {
 
     let replacedOutput = loggerTransformer.getReplacedProgram(modifiedFile, 'dada');
 
-    console.log('replacedOutput', replacedOutput);
+    const data = {
+      children:[],
+      filePreview: replacedOutput,
+      fileWithLogs: modifiedFile
+    }
 
+    fileMap.push({
+        [fullPath]: data
+    });
+
+    let imports = loggerTransformer.getAllImportStatement();
+
+    for(let i = 0, len = imports.length; i < len; i += 1){
+
+      let importedFilePath = path.join(path.dirname(fullPath), imports[i].path) + '.ts';
+      
+      await this.processFile(importedFilePath, data.children);
+
+
+    }
   }
 }
