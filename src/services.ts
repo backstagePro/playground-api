@@ -11,6 +11,9 @@ import RunGenerator from "./services/run/RunGenerator";
 import ShellService from "./services/ShellService";
 import RunServer from "./services/run-service/RunServer";
 import WebsocketServer from "./services/ws/WebsocketServer";
+import ExecutionTree from "./services/ExecutionTree";
+import LoggerFileProducer from "./services/LoggerFileProducer";
+import Config from "./services/Config";
 
 /**
  * Service used for loading the project into the system.
@@ -208,3 +211,49 @@ ServiceLocator.set(SERVICE_WEBSOCKET_SERVER, async () => {
 });
 
 
+/**
+ * Execution tree service
+ *
+ */
+export let SERVICE_EXECUTION_TREE: 'SERVICE_EXECUTION_TREE' = 'SERVICE_EXECUTION_TREE';
+export type SERVICE_EXECUTION_TREE = ExecutionTree;
+export type SERVICE_EXECUTION_TREE_PARAMS = {
+    projectPath: string;
+}
+
+ServiceLocator.set(SERVICE_EXECUTION_TREE, async (params: SERVICE_EXECUTION_TREE_PARAMS) => {
+    
+    return new ExecutionTree(
+        params.projectPath,
+        (await ServiceLocator.get<SERVICE_TRANSFORMER_FACTORY>(SERVICE_TRANSFORMER_FACTORY))
+    );
+
+}, { singleton: false });
+
+/**
+ * Creates modified files with the logs in them
+ *
+ */
+ export let SERVICE_LOGGER_FILE_PRODUCER: 'SERVICE_LOGGER_FILE_PRODUCER' = 'SERVICE_LOGGER_FILE_PRODUCER';
+ export type SERVICE_LOGGER_FILE_PRODUCER = LoggerFileProducer;
+ export type SERVICE_LOGGER_FILE_PRODUCER_PARAMS = {
+     projectPath: string;
+ }
+ 
+ ServiceLocator.set(SERVICE_LOGGER_FILE_PRODUCER, async (params: SERVICE_LOGGER_FILE_PRODUCER_PARAMS) => {
+     
+     return new LoggerFileProducer(params.projectPath)
+ }, { singleton: false });
+
+/**
+ * Get config for the application 
+ *
+ */
+export let SERVICE_CONFIG: 'SERVICE_CONFIG' = 'SERVICE_CONFIG';
+export type SERVICE_CONFIG = Config;
+
+ServiceLocator.set(SERVICE_CONFIG, async () => {
+    
+    return new Config();
+});
+ 

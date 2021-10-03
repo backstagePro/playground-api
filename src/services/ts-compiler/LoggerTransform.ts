@@ -8,10 +8,35 @@ export default class LoggerTransform extends AstTsTransformer {
    * 
    * @returns 
    */
-  public addLogs(identifier: string) : string {
+  public addLogs(identifier: string, replaceImport: (importString) => string) : string {
 
     return this.trasform((node, context) => {
 
+      /**
+       * REPLACE IMPORTANT STATEMENTS WITH THE NEW FILE PATHS
+       */
+      if(ts.isStringLiteral(node)){
+
+        let parent = this.findParentOf(node, (_node) => {
+
+          if(ts.isImportDeclaration(_node)){
+            return true;
+          }
+
+          return false;
+
+        });
+
+        if(parent !== null){
+
+          return context.factory.createStringLiteral(replaceImport(node.getText()));
+        }
+
+      }
+
+      /**
+       * ADD LOGS
+       */
       if(ts.isVariableStatement(node) || ts.isExpressionStatement(node)){
   
         let identNode = this.findFirstChild(node, (_node) => {

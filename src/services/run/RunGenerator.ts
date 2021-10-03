@@ -2,7 +2,7 @@
 import { IArtefact } from "../../model/entities/Artefact";
 import { IProject } from "../../model/entities/Project";
 import { IRun } from "../../model/entities/Run";
-import { SERVICE_REPOSITORY_FACTORY, SERVICE_SHELL, SERVICE_SHELL_PARAMS, SERVICE_TRANSFORMER_FACTORY } from "../../services";
+import { SERVICE_EXECUTION_TREE, SERVICE_EXECUTION_TREE_PARAMS, SERVICE_LOGGER_FILE_PRODUCER, SERVICE_LOGGER_FILE_PRODUCER_PARAMS, SERVICE_REPOSITORY_FACTORY, SERVICE_RUN_GENERATOR, SERVICE_SHELL, SERVICE_SHELL_PARAMS, SERVICE_TRANSFORMER_FACTORY } from "../../services";
 import path from 'path';
 import ServiceLocator from "../ServiceLocator";
 import RunSession, { IRunSessionExecTree, IRunSessionFileData } from "../../model/entities/RunSession";
@@ -69,60 +69,25 @@ export default class RunGenerator {
   }
 
   /**
-   * Used to generate the `execution tree` structure
+   * Creates needed data for each provided file path.
    * 
-   * @param fullPathToRootFile -  this is the path to root ts file, 
-   * from where the program start
-   */
-  public async generateExecutionTree(
-    fullPathToRootFile: string,
-    projectPath: string, 
-    jsonMap = {root: null, children: {}}
-  ) : Promise<IRunSessionExecTree> {
-
-    let loggerTransformer = this.transformerFactory.getTransformer('logger', {
-      filePath: fullPathToRootFile
-    });
-
-    let allImports: {path: string}[] = loggerTransformer.getAllImportStatement();
-
-    for(let i = 0, len = allImports.length; i < len; i += 1){
-      let importPath = allImports[i];
-
-      debugger;
-      
-      let fullImportPath = path.join(path.dirname(fullPathToRootFile), importPath.path ) + '.ts';
-
-      let relativeProjectPath = path.relative(
-        projectPath, path.join(path.dirname(fullPathToRootFile), importPath.path )
-      ) + '.ts' 
-
-      // initialize
-      if( jsonMap.children[fullPathToRootFile] === void(0) ){
-        jsonMap.children[fullPathToRootFile] = []
-      }
-
-      jsonMap.children[fullPathToRootFile].push(relativeProjectPath)
-
-      // collect data for children files
-      await this.generateExecutionTree(fullImportPath, projectPath, jsonMap);
-    }
-
-    return jsonMap;
-  }
-
-  /**
-   * Creates needed data for each provided file path
+   * { modifiedField, filePreview }
    * 
    * @param fullPathToRootFile - the path to the root ts file
    */
-  public async populateFileData(filePath: string){
+  public async populateFileData(filePath: string, loggerFileProducer: SERVICE_LOGGER_FILE_PRODUCER){
 
     let loggerTransformer = this.transformerFactory.getTransformer('logger', {
       filePath: filePath
     });
 
-    let modifiedFile = loggerTransformer.addLogs('dada');
+    let modifiedFile = loggerTransformer.addLogs('dada', (importStringPath) => {
+      
+      const dirName = path.dirname(importStringPath);
+      const baseName = path.parse(importStringPath).name;
+
+      return path.join(dirName, loggerFileProducer.getPlaygroundFilePrefix(baseName));
+    });
 
     let replacedFile = loggerTransformer.getReplacedProgram(modifiedFile, 'dada');
 
@@ -136,37 +101,31 @@ export default class RunGenerator {
 
   }
 
-  private iterateExecutionTree(tree: IRunSessionExecTree, cb: (treeNode) => void) {
-
-    
-    const recur = ( root ) => {
-      
-      cb(root);
-
-      if(tree.children[root]){
-        tree.children[root].forEach((child) => {
-          recur(child);
-        });
-      }
-    };
-
-    recur(tree.root);
-
-  }
-
-  public async populateExecutionTree( tree: IRunSessionExecTree, projectPath: string){
+  public async populateExecutionTree( 
+    tree: IRunSessionExecTree, 
+    projectPath: string,
+    loggerFileProducer: SERVICE_LOGGER_FILE_PRODUCER
+  ){
 
     let fileData = {};
     let allPaths = [];
 
-    this.iterateExecutionTree(tree, (treeNode) => {
+    let exTreeService = await ServiceLocator
+      .get<SERVICE_EXECUTION_TREE, SERVICE_EXECUTION_TREE_PARAMS>(
+        SERVICE_EXECUTION_TREE,
+        {
+          projectPath
+        }
+    );
+
+    exTreeService.iterateExecutionTree(tree, (treeNode) => {
 
       allPaths.push(treeNode);
     });
 
     for(let i = 0, len = allPaths.length; i < len; i += 1){
       let absFilePath = path.join(projectPath, allPaths[i]);
-      fileData[allPaths[i]] = await this.populateFileData(absFilePath);
+      fileData[allPaths[i]] = await this.populateFileData(absFilePath, loggerFileProducer);
     }
 
     return fileData;
@@ -178,7 +137,6 @@ export default class RunGenerator {
     projectPath: string
   ){
 
-    debugger;
     let runSessionRepository = await this.repositoryFactory.getRepository('run-session');
 
     let runSessionId = await runSessionRepository.create(new RunSession({
@@ -190,27 +148,6 @@ export default class RunGenerator {
     return runSessionId;
   }
 
-  private async generateModifiedFiles(fileData: IRunSessionFileData){
-
-    let filePaths = Object.keys(fileData);
-
-    for(let i = 0, len = filePaths.length; i < len; i += 1){
-      let path = filePaths[i];
-
-      let modifiedContent = fileData[path].modifiedFile;
-
-
-    }
-
-  }
-
-  /**
-   * Generate run server in the directory of the project
-   */
-  public async generateRunServer(projectPath: string){
-
-  }
-
   public async startRunSession(runId: string) {
 
     const run: IRun = await this.getRun(runId);
@@ -220,19 +157,37 @@ export default class RunGenerator {
     let fullPathToRun = path.join(project.path, artefact.path);
     let fullPathToService = path.resolve( path.dirname(path.join(project.path, artefact.path)), artefact.servicePath);
 
+    const executionTreeService = await ServiceLocator
+      .get<SERVICE_EXECUTION_TREE, SERVICE_EXECUTION_TREE_PARAMS>(
+        SERVICE_EXECUTION_TREE,
+        {
+          projectPath: project.path
+        }
+    );
+
+    let loggerFileProducer = await ServiceLocator
+      .get<SERVICE_LOGGER_FILE_PRODUCER, SERVICE_LOGGER_FILE_PRODUCER_PARAMS>(
+        SERVICE_LOGGER_FILE_PRODUCER, {
+          projectPath: project.path
+        }
+    );
+
     // [1] GENERATE EXECUTION TREE
-    const executionTree = await this.generateExecutionTree(fullPathToService, project.path);
+    const executionTree = await executionTreeService.generateExecutionTree( fullPathToService );
     executionTree.root = path.relative(project.path, fullPathToService);
 
-    debugger;
+    // [2] CREATE A FILE DATA
+    const fileData = await this.populateExecutionTree(executionTree, project.path, loggerFileProducer);
 
-    const fileData = await this.populateExecutionTree(executionTree, project.path);
-
-    debugger;
-
+    // [3] SAVE FILE DATA TO DATABASE
     await this.saveRunSession(fileData, executionTree, project.path);
 
-    debugger;
+    // [5] generate files 
+    await loggerFileProducer.createModifierFiles(fileData);
+
+
+
+    // debugger;
 
     // const fileMap = [];
 
@@ -242,8 +197,4 @@ export default class RunGenerator {
     // return fileMap;
   }
 
-  public async processFile( fullPath: string, fileMap ) {
-
-    
-  }
 }
