@@ -8,6 +8,8 @@ export default (ws: WebsocketServer) => {
 
     // params.ws.send('dadad');
 
+    // store the ws socket for later usage
+
   })
 
 }

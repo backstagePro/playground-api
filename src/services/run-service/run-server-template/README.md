@@ -1,50 +1,76 @@
-[1] - Generate a server files (**play**.ts) , need project path
-[] - Generate a config file with path to the tested file
-[2] - Start server, need project path to find the server.**play**.ts file, shell service
+# First Run
 
-[] - Provide a path /run which will run the code in new process, the master server will collect all the data from the spawn process
+[If there is not run into mongoDb]
 
-- the data will be sand via websocket to the client
+1. Generate FILE EXECUTION TREE
 
-- execute code
-- collect show data
+- Generate tree (but only tree) / save it later in db as **The file execution tree** /
 
-[] - Start websocket server
+```
+root: {<pathOfImport>}
+children: {
+  {<pathOfImport>}: [...children ]
+}
+```
 
-[Browser]
-[1] - Connect to websocket server ...
+2. Populate the EXECUTION TREE with preview data and file modified data BY creating a new STRUCTURE, creating a new MAP structure in which we save
 
-DO WE NEED Webscoket server?
-What we will do if the server crashes?
+```
+{ <pathOfImport> } : {
+  filePreview: '...'
+  modifiedFile: '...'
+}
+```
 
-- display collected data ...
+3. Register the RUN into mongoDb **started runs**, store: clonedFiles, previews, mongoData
 
-Steps
+- Save the data in flat view in Mongo
 
-RUN START
+```
+{
+  // file data in the tree
+  {path of the import}: {
+  ... fileClonedData, filePreviewData
+  },
 
-[1] - compile files AST
-[2] - create files map and generate the clones
-[3] - create a preview files
-[4] - start server
-[5] - spawn a new process from the server, which will be the tested service
-[6] - server will collect all tha data from the spawn process
+  // The file execution tree
+  root: {path of import}
+  children: {
+    {path of import}: [...children ]
+  }
+}
+```
 
-on the client
-[1] - connect to websocket server
-[2] - display the data
+**start generating files here - Generate a copies of the cloned files (play.ts) into project directory, based on the created structure... in [2]**
 
-CHANGE FILE
+4. Start server with the cloned files (SHELL)
 
-{ Simple }
+5. Collect data from the run script into MongoDb **run data**
 
-- Run shell command with the provided file and global functions...
-  In this case we should generate a START file, also file with global functions...
-  Store the last collected data into MongoDb ...
+6. Start watcher for file change ...
 
-On the client pull last data from mongodb
+7. Return { clonedFiles, previews, mongoData }
 
-[Websocket]
+[Else]
 
-- create webscoket from the api
-- use this socket to send data about the last pulled variable data
+- Return run data from mongo db
+
+[Client]
+
+1. Connect to websocket for update of the data
+
+# CASE WHEN FILE IS CHANGED
+
+-> Generate the new EXECUTION tree
+-> Check if file is present in the tree, (or it is the root file)...
+
+[if not present]
+
+- exit
+
+[if present]
+
+- update the whole EXECUTION TREE with the new one
+- update file data for only this file into mongodb - the other data will be populated from the data in mongo db
+- run start server to collect the new data
+- push new data to websocket

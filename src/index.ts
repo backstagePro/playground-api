@@ -21,9 +21,12 @@ app.listen(port, () => {
   console.log(`Playground api listening at http://localhost:${port}`)
 });
 
+// Init websockets
 ServiceLocator.get<SERVICE_WEBSOCKET_SERVER>(SERVICE_WEBSOCKET_SERVER).then((server) => {
   console.log("Starting websocket server")
+  
   server.startServer(8081);
 
+  // add sockets for runs
   Run(server);
 });

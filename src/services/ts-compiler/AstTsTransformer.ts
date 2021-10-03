@@ -107,6 +107,10 @@ export default class AstTsTransformer {
    */
   public getAllImportStatement(): Array<{ path: string }>{
         
+    if(!this.sourceFile.statements){
+      return [];
+    }
+
     let imports = [];
 
     this.sourceFile.statements.forEach((statement) => {

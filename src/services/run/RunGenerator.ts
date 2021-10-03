@@ -10,18 +10,24 @@ export default class RunGenerator {
 
   private repositoryFactory: SERVICE_REPOSITORY_FACTORY;
 
-  private transofrmerFactory: SERVICE_TRANSFORMER_FACTORY;
+  private transformerFactory: SERVICE_TRANSFORMER_FACTORY;
 
   constructor( 
     transofrmerFactory: SERVICE_TRANSFORMER_FACTORY,
     repositoryFactory: SERVICE_REPOSITORY_FACTORY,
   ){
 
-    this.transofrmerFactory = transofrmerFactory;
+    this.transformerFactory = transofrmerFactory;
 
     this.repositoryFactory = repositoryFactory;
   }
 
+  /**
+   * Returns Project entity
+   * 
+   * @param projectId 
+   * @returns 
+   */
   private async getProject(projectId: string){
 
     let projectRepository = await this.repositoryFactory.getRepository('project');
@@ -31,6 +37,12 @@ export default class RunGenerator {
     return project;
   }
 
+  /**
+   * Returns Artefact entity
+   * 
+   * @param artefactId 
+   * @returns 
+   */
   private async getArtefact(artefactId: string){
 
     let artefactRepository = await this.repositoryFactory.getRepository('artefact');
@@ -40,6 +52,12 @@ export default class RunGenerator {
     return artefact;
   }
 
+  /**
+   * Returns Run entity
+   * 
+   * @param runId 
+   * @returns 
+   */
   private async getRun(runId: string){
     
     let runRepository = await this.repositoryFactory.getRepository('run');
@@ -47,6 +65,129 @@ export default class RunGenerator {
     let run = await runRepository.findOne(runId);
 
     return run;
+  }
+
+  /**
+   * Used to generate the `execution tree` structure
+   * 
+   * @param fullPathToRootFile -  this is the path to root ts file, 
+   * from where the program start
+   */
+  public async generateExecutionTree(fullPathToRootFile: string, jsonMap = {root: null, children: {}}) : Promise<{
+    root: string,
+    children: { [filePathString: string]: string[] }
+  }> {
+
+    let loggerTransformer = this.transformerFactory.getTransformer('logger', {
+      filePath: fullPathToRootFile
+    });
+
+    let allImports: {path: string}[] = loggerTransformer.getAllImportStatement();
+
+    for(let i = 0, len = allImports.length; i < len; i += 1){
+      let importPath = allImports[i];
+
+      let fullImportPath = path.join(path.dirname(fullPathToRootFile), importPath.path ) + '.ts';
+
+      // initialize
+      if( jsonMap.children[fullPathToRootFile] === void(0) ){
+        jsonMap.children[fullPathToRootFile] = []
+      }
+
+      jsonMap.children[fullPathToRootFile].push(fullImportPath)
+
+      // collect data for children files
+      await this.generateExecutionTree(fullImportPath, jsonMap);
+    }
+
+    return jsonMap;
+  }
+
+  /**
+   * Creates needed data for each provided file path
+   * 
+   * @param fullPathToRootFile - the path to the root ts file
+   */
+  public async populateFileData(filePath: string){
+
+    let loggerTransformer = this.transformerFactory.getTransformer('logger', {
+      filePath: filePath
+    });
+
+    let modifiedFile = loggerTransformer.addLogs('dada');
+
+    let replacedFile = loggerTransformer.getReplacedProgram(modifiedFile, 'dada');
+
+    return {
+      // will be run on the server
+      modifiedFile: modifiedFile,
+
+      // will be displayed in the broweser
+      filePreview: replacedFile
+    }
+
+    // const data = {
+    //   children:[],
+    //   filePreview: replacedOutput,
+    //   fileWithLogs: modifiedFile
+    // }
+
+    // fileMap.push({
+    //     [fullPath]: data
+    // });
+
+    // let imports = loggerTransformer.getAllImportStatement();
+
+    // for(let i = 0, len = imports.length; i < len; i += 1){
+
+    //   let importedFilePath = path.join(path.dirname(fullPath), imports[i].path) + '.ts';
+      
+    //   await this.processFile(importedFilePath, data.children);
+
+
+    // }
+
+  }
+
+  private iterateExecutionTree(tree: { 
+    root: string,
+    children: { [filePathString: string]: string[] }
+  }, cb: (treeNode) => void) {
+
+    
+    const recur = ( root ) => {
+      
+      cb(root);
+
+      if(tree.children[root]){
+        tree.children[root].forEach((child) => {
+          recur(child);
+        });
+      }
+    };
+
+    recur(tree.root);
+
+  }
+
+  public async populateExecutionTree( tree: { 
+    root: string,
+    children: { [filePathString: string]: string[] }
+  }){
+
+    let fileData = {};
+    let allPaths = [];
+
+    this.iterateExecutionTree(tree, (treeNode) => {
+
+      allPaths.push(treeNode);
+    });
+
+    for(let i = 0, len = allPaths.length; i < len; i += 1){
+      fileData[allPaths[i]] = await this.populateFileData(allPaths[i]);
+    }
+
+    return fileData;
   }
 
   /**
@@ -65,44 +206,26 @@ export default class RunGenerator {
     let fullPathToRun = path.join(project.path, artefact.path);
     let fullPathToService = path.resolve( path.dirname(path.join(project.path, artefact.path)), artefact.servicePath);
 
-    const fileMap = [];
+    // [1] GENERATE EXECUTION TREE
+    const executionTree = await this.generateExecutionTree(fullPathToService);
+    executionTree.root = fullPathToService;
 
-    // clone the files 
-    await this.processFile(fullPathToService, fileMap);
+    debugger;
 
-    return fileMap;
+    const fileData = await this.populateExecutionTree(executionTree);
+
+    debugger;
+
+    // const fileMap = [];
+
+    // // clone the files 
+    // await this.processFile(fullPathToService, fileMap);
+
+    // return fileMap;
   }
 
   public async processFile( fullPath: string, fileMap ) {
 
-    // get transformer
-    const transformerFactory = await ServiceLocator.get<SERVICE_TRANSFORMER_FACTORY>(SERVICE_TRANSFORMER_FACTORY)
-
-    let loggerTransformer = transformerFactory.getTransformer('logger', {filePath: fullPath});
-
-    let modifiedFile = loggerTransformer.addLogs('dada');
-
-    let replacedOutput = loggerTransformer.getReplacedProgram(modifiedFile, 'dada');
-
-    const data = {
-      children:[],
-      filePreview: replacedOutput,
-      fileWithLogs: modifiedFile
-    }
-
-    fileMap.push({
-        [fullPath]: data
-    });
-
-    let imports = loggerTransformer.getAllImportStatement();
-
-    for(let i = 0, len = imports.length; i < len; i += 1){
-
-      let importedFilePath = path.join(path.dirname(fullPath), imports[i].path) + '.ts';
-      
-      await this.processFile(importedFilePath, data.children);
-
-
-    }
+    
   }
 }

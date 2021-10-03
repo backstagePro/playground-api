@@ -9,7 +9,7 @@ export default class WebsocketServer {
     /**
      * Storage of all connected sockets
      */
-    private clientsChannelMap = {};
+    private clientsChannelMap = [];
 
     private onConnectionListeners = {};
 
@@ -119,9 +119,13 @@ export default class WebsocketServer {
                 return;
             }
 
-            // store the socket
-            this.clientsChannelMap[parsed.channel] = ws;
+            if(this.clientsChannelMap[parsed.channel] === void(0)){
+              this.clientsChannelMap[parsed.channel] = [];
+            }
 
+            // store the socket
+            this.clientsChannelMap[parsed.channel].push(ws);
+            
             ws.addEventListener('close', this.runOnCloseListeneres.bind(this, parsed.channel, { queryParams: parsed.urlQueryParams, ws: ws }), {once: true});
 
             this.runOnConnectionListeners(parsed.channel, { queryParams: parsed.urlQueryParams, ws: ws });
@@ -178,12 +182,17 @@ export default class WebsocketServer {
             ...message
         };
 
-        let ws = this.clientsChannelMap[channel]
-        if(ws.readyState === WebSocket.OPEN){
-            ws.send( JSON.stringify(msg));
-        } else {
-            throw new Error('Socket not open! channel: ' + channel);
-        }
+        let wss = this.clientsChannelMap[channel];
+
+        wss.forEahc((ws) => {
+
+          if(ws.readyState === WebSocket.OPEN){
+              ws.send( JSON.stringify(msg));
+          } else {
+              throw new Error('Socket not open! channel: ' + channel);
+          }
+        });
+
     }
 
 }
