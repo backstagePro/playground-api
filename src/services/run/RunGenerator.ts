@@ -5,6 +5,7 @@ import { IRun } from "../../model/entities/Run";
 import { SERVICE_REPOSITORY_FACTORY, SERVICE_SHELL, SERVICE_SHELL_PARAMS, SERVICE_TRANSFORMER_FACTORY } from "../../services";
 import path from 'path';
 import ServiceLocator from "../ServiceLocator";
+import RunSession, { IRunSessionExecTree, IRunSessionFileData } from "../../model/entities/RunSession";
 
 export default class RunGenerator {
 
@@ -73,10 +74,11 @@ export default class RunGenerator {
    * @param fullPathToRootFile -  this is the path to root ts file, 
    * from where the program start
    */
-  public async generateExecutionTree(fullPathToRootFile: string, jsonMap = {root: null, children: {}}) : Promise<{
-    root: string,
-    children: { [filePathString: string]: string[] }
-  }> {
+  public async generateExecutionTree(
+    fullPathToRootFile: string,
+    projectPath: string, 
+    jsonMap = {root: null, children: {}}
+  ) : Promise<IRunSessionExecTree> {
 
     let loggerTransformer = this.transformerFactory.getTransformer('logger', {
       filePath: fullPathToRootFile
@@ -87,17 +89,23 @@ export default class RunGenerator {
     for(let i = 0, len = allImports.length; i < len; i += 1){
       let importPath = allImports[i];
 
+      debugger;
+      
       let fullImportPath = path.join(path.dirname(fullPathToRootFile), importPath.path ) + '.ts';
+
+      let relativeProjectPath = path.relative(
+        projectPath, path.join(path.dirname(fullPathToRootFile), importPath.path )
+      ) + '.ts' 
 
       // initialize
       if( jsonMap.children[fullPathToRootFile] === void(0) ){
         jsonMap.children[fullPathToRootFile] = []
       }
 
-      jsonMap.children[fullPathToRootFile].push(fullImportPath)
+      jsonMap.children[fullPathToRootFile].push(relativeProjectPath)
 
       // collect data for children files
-      await this.generateExecutionTree(fullImportPath, jsonMap);
+      await this.generateExecutionTree(fullImportPath, projectPath, jsonMap);
     }
 
     return jsonMap;
@@ -126,33 +134,9 @@ export default class RunGenerator {
       filePreview: replacedFile
     }
 
-    // const data = {
-    //   children:[],
-    //   filePreview: replacedOutput,
-    //   fileWithLogs: modifiedFile
-    // }
-
-    // fileMap.push({
-    //     [fullPath]: data
-    // });
-
-    // let imports = loggerTransformer.getAllImportStatement();
-
-    // for(let i = 0, len = imports.length; i < len; i += 1){
-
-    //   let importedFilePath = path.join(path.dirname(fullPath), imports[i].path) + '.ts';
-      
-    //   await this.processFile(importedFilePath, data.children);
-
-
-    // }
-
   }
 
-  private iterateExecutionTree(tree: { 
-    root: string,
-    children: { [filePathString: string]: string[] }
-  }, cb: (treeNode) => void) {
+  private iterateExecutionTree(tree: IRunSessionExecTree, cb: (treeNode) => void) {
 
     
     const recur = ( root ) => {
@@ -170,10 +154,7 @@ export default class RunGenerator {
 
   }
 
-  public async populateExecutionTree( tree: { 
-    root: string,
-    children: { [filePathString: string]: string[] }
-  }){
+  public async populateExecutionTree( tree: IRunSessionExecTree, projectPath: string){
 
     let fileData = {};
     let allPaths = [];
@@ -184,10 +165,43 @@ export default class RunGenerator {
     });
 
     for(let i = 0, len = allPaths.length; i < len; i += 1){
-      fileData[allPaths[i]] = await this.populateFileData(allPaths[i]);
+      let absFilePath = path.join(projectPath, allPaths[i]);
+      fileData[allPaths[i]] = await this.populateFileData(absFilePath);
     }
 
     return fileData;
+  }
+
+  private async saveRunSession(
+    fileData: IRunSessionFileData, 
+    executionTree: IRunSessionExecTree,
+    projectPath: string
+  ){
+
+    debugger;
+    let runSessionRepository = await this.repositoryFactory.getRepository('run-session');
+
+    let runSessionId = await runSessionRepository.create(new RunSession({
+      fileData, 
+      executionTree,
+      projectPath
+    }));
+
+    return runSessionId;
+  }
+
+  private async generateModifiedFiles(fileData: IRunSessionFileData){
+
+    let filePaths = Object.keys(fileData);
+
+    for(let i = 0, len = filePaths.length; i < len; i += 1){
+      let path = filePaths[i];
+
+      let modifiedContent = fileData[path].modifiedFile;
+
+
+    }
+
   }
 
   /**
@@ -207,12 +221,16 @@ export default class RunGenerator {
     let fullPathToService = path.resolve( path.dirname(path.join(project.path, artefact.path)), artefact.servicePath);
 
     // [1] GENERATE EXECUTION TREE
-    const executionTree = await this.generateExecutionTree(fullPathToService);
-    executionTree.root = fullPathToService;
+    const executionTree = await this.generateExecutionTree(fullPathToService, project.path);
+    executionTree.root = path.relative(project.path, fullPathToService);
 
     debugger;
 
-    const fileData = await this.populateExecutionTree(executionTree);
+    const fileData = await this.populateExecutionTree(executionTree, project.path);
+
+    debugger;
+
+    await this.saveRunSession(fileData, executionTree, project.path);
 
     debugger;
 
