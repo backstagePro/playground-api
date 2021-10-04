@@ -1,5 +1,5 @@
 import AstTsTransformer from "./AstTsTransformer";
-import LoggerTransform from "./LoggerTransform";
+import RunTransform from "./RunTransform";
 
 type transformers = 'logger';
 type params = {
@@ -11,7 +11,7 @@ export default class TransformerFactory {
   public getTransformer(type: transformers, params: params) {
 
     if(type === 'logger'){
-      return new LoggerTransform(params.filePath);
+      return new RunTransform(params.filePath);
     }
     
     return null;

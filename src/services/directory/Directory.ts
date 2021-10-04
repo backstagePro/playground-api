@@ -180,4 +180,19 @@ export default class Directory {
 
         return require(path.join(this.path, filePath));
     }
+
+    async readFile(filePath: string) : Promise<string> {
+        const targetPath = path.resolve(this.path, filePath);
+        
+        return (await new Promise<string>((res, rej) => {
+            oldfs.readFile(targetPath, 'utf-8', (err, data) => {
+                if(err){
+                    return rej(err);
+                }
+
+                res(data.toString());
+            });
+        }));
+ 
+    }
 }

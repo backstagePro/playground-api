@@ -1,6 +1,6 @@
 
 import { spawn } from 'child_process';
-import { ChildProcessWithoutNullStreams } from 'node:child_process';
+import { ChildProcessWithoutNullStreams, SpawnOptionsWithoutStdio } from 'node:child_process';
 import util from 'util';
 const exec = util.promisify(require('child_process').exec);
 
@@ -70,10 +70,10 @@ export default class ShellService {
    */
   public execCommandAsStream(
       params: Array< string > = [],
-      options = {},
+      options: SpawnOptionsWithoutStdio,
       events: {
-          stdoutData?: (data) => void;
-          stderrData?: (data) => void;
+          onStdoutData?: (data) => void;
+          onStderrData?: (data) => void;
           onError?: (error) => void;
           onClose?: (code, signal?) => void;
           onExit?: (code, exitSignal) => void;
@@ -85,12 +85,12 @@ export default class ShellService {
 
       child.stdout.on('data', (data) => {
           // console.log(`stdout:\n${data}`);
-          events.stdoutData && events.stdoutData(data);
+          events.onStdoutData && events.onStdoutData(data);
       });
 
       child.stderr.on('data', (data) => {
           // console.error(`stderr: ${data}`);
-          events.stderrData && events.stderrData(data);
+          events.onStderrData && events.onStderrData(data);
       });
 
       child.on('error', (error) => {

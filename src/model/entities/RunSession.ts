@@ -20,6 +20,7 @@ interface IRunSessionParams {
   fileData: any;
   executionTree: any;
   projectPath: string;
+  runPath: string;
 }
 
 export default class RunSession {
@@ -30,11 +31,14 @@ export default class RunSession {
 
   private executionTree: IRunSessionExecTree;
 
+  private runPath: string;
+
   constructor(params: IRunSessionParams){
 
     this.fileData = params.fileData;
     this.executionTree = params.executionTree;  
     this.projectPath = params.projectPath;
+    this.runPath = params.runPath;
   }
 
 }

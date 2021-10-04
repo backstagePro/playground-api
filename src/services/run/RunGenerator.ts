@@ -2,7 +2,7 @@
 import { IArtefact } from "../../model/entities/Artefact";
 import { IProject } from "../../model/entities/Project";
 import { IRun } from "../../model/entities/Run";
-import { SERVICE_EXECUTION_TREE, SERVICE_EXECUTION_TREE_PARAMS, SERVICE_LOGGER_FILE_PRODUCER, SERVICE_LOGGER_FILE_PRODUCER_PARAMS, SERVICE_REPOSITORY_FACTORY, SERVICE_RUN_GENERATOR, SERVICE_SHELL, SERVICE_SHELL_PARAMS, SERVICE_TRANSFORMER_FACTORY } from "../../services";
+import { SERVICE_EXECUTION_TREE, SERVICE_EXECUTION_TREE_PARAMS, SERVICE_LOGGER_FILE_PRODUCER, SERVICE_LOGGER_FILE_PRODUCER_PARAMS, SERVICE_REPOSITORY_FACTORY, SERVICE_RUN_GENERATOR, SERVICE_RUN_SERVER, SERVICE_SHELL, SERVICE_SHELL_PARAMS, SERVICE_TRANSFORMER_FACTORY } from "../../services";
 import path from 'path';
 import ServiceLocator from "../ServiceLocator";
 import RunSession, { IRunSessionExecTree, IRunSessionFileData } from "../../model/entities/RunSession";
@@ -75,21 +75,44 @@ export default class RunGenerator {
    * 
    * @param fullPathToRootFile - the path to the root ts file
    */
-  public async populateFileData(filePath: string, loggerFileProducer: SERVICE_LOGGER_FILE_PRODUCER){
+  public async createFileInfo(
+    filePath: string, 
+    
+    loggerFileProducer: SERVICE_LOGGER_FILE_PRODUCER,
 
-    let loggerTransformer = this.transformerFactory.getTransformer('logger', {
+    options: {
+      addLogs: boolean
+    } = {
+      addLogs: true
+    }
+  ){
+
+    const runTransformer = this.transformerFactory.getTransformer('logger', {
       filePath: filePath
     });
 
-    let modifiedFile = loggerTransformer.addLogs('dada', (importStringPath) => {
+    if(options.addLogs){
+
+      runTransformer.setLogsModify();
+    }
+
+    runTransformer.setImportModify((importStringPath) => {
       
+
+      importStringPath = importStringPath.substring(1, importStringPath.length-1);
+
       const dirName = path.dirname(importStringPath);
       const baseName = path.parse(importStringPath).name;
+
+      if(dirName === '.'){
+        return `./${loggerFileProducer.getPlaygroundFilePrefix(baseName)}`;
+      }
 
       return path.join(dirName, loggerFileProducer.getPlaygroundFilePrefix(baseName));
     });
 
-    let replacedFile = loggerTransformer.getReplacedProgram(modifiedFile, 'dada');
+    let modifiedFile = runTransformer.modifyProgram('dada');
+    let replacedFile = runTransformer.getReplacedProgram(modifiedFile, 'dada');
 
     return {
       // will be run on the server
@@ -101,10 +124,19 @@ export default class RunGenerator {
 
   }
 
+  /**
+   * Populate the created execution tree with the file data for each file inside
+   * 
+   * @param tree 
+   * @param projectPath 
+   * @param loggerFileProducer 
+   * @returns 
+   */
   public async populateExecutionTree( 
     tree: IRunSessionExecTree, 
     projectPath: string,
-    loggerFileProducer: SERVICE_LOGGER_FILE_PRODUCER
+    loggerFileProducer: SERVICE_LOGGER_FILE_PRODUCER,
+    runFilePath: string
   ){
 
     let fileData = {};
@@ -123,18 +155,36 @@ export default class RunGenerator {
       allPaths.push(treeNode);
     });
 
+    let fullFilePathToRunFile = path.join(projectPath, runFilePath);
+    fileData[runFilePath] = await this.createFileInfo(
+      fullFilePathToRunFile, 
+      loggerFileProducer,
+      { 
+        addLogs: false
+      }
+    );
+
     for(let i = 0, len = allPaths.length; i < len; i += 1){
       let absFilePath = path.join(projectPath, allPaths[i]);
-      fileData[allPaths[i]] = await this.populateFileData(absFilePath, loggerFileProducer);
+      fileData[allPaths[i]] = await this.createFileInfo(absFilePath, loggerFileProducer);
     }
 
     return fileData;
   }
 
+  /**
+   * Save run session data into db
+   * 
+   * @param fileData 
+   * @param executionTree 
+   * @param projectPath 
+   * @returns 
+   */
   private async saveRunSession(
     fileData: IRunSessionFileData, 
     executionTree: IRunSessionExecTree,
-    projectPath: string
+    projectPath: string,
+    runPath: string
   ){
 
     let runSessionRepository = await this.repositoryFactory.getRepository('run-session');
@@ -142,7 +192,8 @@ export default class RunGenerator {
     let runSessionId = await runSessionRepository.create(new RunSession({
       fileData, 
       executionTree,
-      projectPath
+      projectPath,
+      runPath
     }));
 
     return runSessionId;
@@ -150,13 +201,18 @@ export default class RunGenerator {
 
   public async startRunSession(runId: string) {
 
+    // get entities
     const run: IRun = await this.getRun(runId);
     const artefact: IArtefact = await this.getArtefact(run.artefactId);
     const project: IProject = await this.getProject(artefact.projectId);
 
+    // get full path to run file
     let fullPathToRun = path.join(project.path, artefact.path);
+
+    // get full path to service (functionality) refered in the run 
     let fullPathToService = path.resolve( path.dirname(path.join(project.path, artefact.path)), artefact.servicePath);
 
+    // get the needed services
     const executionTreeService = await ServiceLocator
       .get<SERVICE_EXECUTION_TREE, SERVICE_EXECUTION_TREE_PARAMS>(
         SERVICE_EXECUTION_TREE,
@@ -165,7 +221,10 @@ export default class RunGenerator {
         }
     );
 
-    let loggerFileProducer = await ServiceLocator
+    const runServer = await ServiceLocator
+      .get<SERVICE_RUN_SERVER>(SERVICE_RUN_SERVER);
+
+    const loggerFileProducer = await ServiceLocator
       .get<SERVICE_LOGGER_FILE_PRODUCER, SERVICE_LOGGER_FILE_PRODUCER_PARAMS>(
         SERVICE_LOGGER_FILE_PRODUCER, {
           projectPath: project.path
@@ -177,24 +236,21 @@ export default class RunGenerator {
     executionTree.root = path.relative(project.path, fullPathToService);
 
     // [2] CREATE A FILE DATA
-    const fileData = await this.populateExecutionTree(executionTree, project.path, loggerFileProducer);
+    const fileData = await this.populateExecutionTree(executionTree, project.path, loggerFileProducer, artefact.path);
 
-    // [3] SAVE FILE DATA TO DATABASE
-    await this.saveRunSession(fileData, executionTree, project.path);
+    // [3] SAVE EXTRACTED DATA TO DATABASE
+    await this.saveRunSession(fileData, executionTree, project.path, artefact.path);
 
-    // [5] generate files 
+    // [5] GENERATE MODIFIED FILES
     await loggerFileProducer.createModifierFiles(fileData);
 
+    // [6] GENERATE START SCRIPT
+    await runServer.generateRunServer(project.path, fullPathToRun);
+
+    // [7] RUN THE START SCRIPT
+    await runServer.startRunServer(project.path);
 
 
-    // debugger;
-
-    // const fileMap = [];
-
-    // // clone the files 
-    // await this.processFile(fullPathToService, fileMap);
-
-    // return fileMap;
   }
 
 }

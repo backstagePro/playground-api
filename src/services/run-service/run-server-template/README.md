@@ -41,9 +41,14 @@ children: {
 }
 ```
 
-**start generating files here - Generate a copies of the cloned files (play.ts) into project directory, based on the created structure... in [2]**
+**start generating files here**
 
-4. Start server with the cloned files (SHELL)
+- Generate a copies of the cloned files (play.ts) into project directory, based on the created structure... in [2]\*\*
+
+We need to require the `run` somehow in the
+script start file...
+
+4. RUN CODE with the cloned files (SHELL)
 
 5. Collect data from the run script into MongoDb **run data**
 

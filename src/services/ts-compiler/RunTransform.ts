@@ -1,21 +1,48 @@
 import ts from "typescript";
 import AstTsTransformer from "./AstTsTransformer";
 
-export default class LoggerTransform extends AstTsTransformer {
+/**
+ * Used to transform typescript file for showing the data inside 
+ * when the code run.
+ */
+export default class RunTransform extends AstTsTransformer {
+
+  private modifyMap: {
+    logs: boolean,
+    imports: boolean | {
+      replaceImport: (importString) => string
+    }
+  } = {
+    'logs': false,
+    'imports': false
+  };
+
+  public setImportModify(replaceImport: (importString) => string){
+
+    this.modifyMap.imports = {
+      replaceImport
+    };
+  }
+
+  public setLogsModify(){
+    this.modifyMap.logs = true;
+  }
 
   /**
-   * Add logs to file 
+   * Modify the program depends on `modifyMap` var
    * 
    * @returns 
    */
-  public addLogs(identifier: string, replaceImport: (importString) => string) : string {
+  public modifyProgram(
+    identifier: string
+  ) : string {
 
     return this.trasform((node, context) => {
 
       /**
        * REPLACE IMPORTANT STATEMENTS WITH THE NEW FILE PATHS
        */
-      if(ts.isStringLiteral(node)){
+      if(ts.isStringLiteral(node) && this.modifyMap.imports !== false){
 
         let parent = this.findParentOf(node, (_node) => {
 
@@ -29,7 +56,9 @@ export default class LoggerTransform extends AstTsTransformer {
 
         if(parent !== null){
 
-          return context.factory.createStringLiteral(replaceImport(node.getText()));
+          return context.factory.createStringLiteral(
+            (this.modifyMap.imports as any).replaceImport(node.getText())
+          );
         }
 
       }
@@ -37,7 +66,7 @@ export default class LoggerTransform extends AstTsTransformer {
       /**
        * ADD LOGS
        */
-      if(ts.isVariableStatement(node) || ts.isExpressionStatement(node)){
+      if((ts.isVariableStatement(node) || ts.isExpressionStatement(node)) && this.modifyMap.logs !== false){
   
         let identNode = this.findFirstChild(node, (_node) => {
   
@@ -52,7 +81,7 @@ export default class LoggerTransform extends AstTsTransformer {
           node, // orignal node  
   
           context.factory.createExpressionStatement(context.factory.createCallExpression(
-            context.factory.createIdentifier("__show__dada"),
+            context.factory.createIdentifier(`__show__${identifier}`),
             undefined,
             [context.factory.createObjectLiteralExpression(
               [
