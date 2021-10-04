@@ -14,6 +14,7 @@ import WebsocketServer from "./services/ws/WebsocketServer";
 import ExecutionTree from "./services/ExecutionTree";
 import LoggerFileProducer from "./services/LoggerFileProducer";
 import Config from "./services/Config";
+import RunFilesUtils from "./services/RunFilesUtils";
 
 /**
  * Service used for loading the project into the system.
@@ -166,7 +167,8 @@ ServiceLocator.set(SERVICE_RUN_GENERATOR, async () => {
     
     return new RunGenerator(
         (await ServiceLocator.get<SERVICE_TRANSFORMER_FACTORY>(SERVICE_TRANSFORMER_FACTORY)),
-        (await ServiceLocator.get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY))
+        (await ServiceLocator.get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)),
+        (await ServiceLocator.get<SERVICE_RUN_FILES_UTILS>(SERVICE_RUN_FILES_UTILS))
     );
 });
 
@@ -195,7 +197,9 @@ export type SERVICE_RUN_SERVER = RunServer;
 
 ServiceLocator.set(SERVICE_RUN_SERVER, async () => {
     
-    return new RunServer();
+    return new RunServer(
+        (await ServiceLocator.get<SERVICE_RUN_FILES_UTILS>(SERVICE_RUN_FILES_UTILS))
+    );
 });
 
 /**
@@ -242,7 +246,10 @@ ServiceLocator.set(SERVICE_EXECUTION_TREE, async (params: SERVICE_EXECUTION_TREE
  
  ServiceLocator.set(SERVICE_LOGGER_FILE_PRODUCER, async (params: SERVICE_LOGGER_FILE_PRODUCER_PARAMS) => {
      
-     return new LoggerFileProducer(params.projectPath)
+    return new LoggerFileProducer(
+        params.projectPath,
+        (await ServiceLocator.get<SERVICE_RUN_FILES_UTILS>(SERVICE_RUN_FILES_UTILS))
+    );
  }, { singleton: false });
 
 /**
@@ -257,3 +264,15 @@ ServiceLocator.set(SERVICE_CONFIG, async () => {
     return new Config();
 });
  
+
+/**
+ * Utils related to run files 
+ *
+ */
+export let SERVICE_RUN_FILES_UTILS: 'SERVICE_RUN_FILES_UTILS' = 'SERVICE_RUN_FILES_UTILS';
+export type SERVICE_RUN_FILES_UTILS = RunFilesUtils;
+
+ServiceLocator.set(SERVICE_RUN_FILES_UTILS, async () => {
+    
+    return new RunFilesUtils();
+});

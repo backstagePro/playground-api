@@ -1,5 +1,5 @@
 import { template } from 'lodash'
-import { SERVICE_DIRECTORY, SERVICE_SHELL, SERVICE_SHELL_PARAMS } from '../../services'
+import { SERVICE_DIRECTORY, SERVICE_RUN_FILES_UTILS, SERVICE_SHELL, SERVICE_SHELL_PARAMS } from '../../services'
 import ServiceLocator from '../ServiceLocator'
 import path from 'path';
 
@@ -7,6 +7,22 @@ import path from 'path';
  * This service is responsible for creating a test server for all runs, 
  */
 export default class RunService {
+
+  private runFilesUtils: SERVICE_RUN_FILES_UTILS;
+
+  constructor(runFilesUtils: SERVICE_RUN_FILES_UTILS){
+
+    this.runFilesUtils = runFilesUtils;
+  }
+
+  private getPathToModifiedRun(runPath){
+    
+    const dirName = path.dirname(runPath);
+    const baseName = path.parse(runPath).name;
+
+    const _pathToModifiedRun = path.join(dirName, `${baseName}`);
+    return _pathToModifiedRun;
+  }
 
   /**
    * Create a run server file

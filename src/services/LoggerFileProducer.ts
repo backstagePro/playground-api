@@ -1,22 +1,19 @@
 import { IRunSessionFileData } from "../model/entities/RunSession";
 import path from 'path';
 import ServiceLocator from "./ServiceLocator";
-import { SERVICE_DIRECTORY } from "../services";
+import { SERVICE_DIRECTORY, SERVICE_RUN_FILES_UTILS } from "../services";
 
 
 export default class LoggerFileProducer {
-  private readonly PLAY_FILE_POSTFIX = '__play__.ts';
 
   private projectPath: string;
 
-  constructor(projectPath: string){
+  private runFilesUtils: SERVICE_RUN_FILES_UTILS;
+
+  constructor(projectPath: string, runFileUtils: SERVICE_RUN_FILES_UTILS){
 
     this.projectPath = projectPath;
-  }
-
-  public getPlaygroundFilePrefix(fileName: string){
-    
-    return `${fileName}.${this.PLAY_FILE_POSTFIX}`;
+    this.runFilesUtils = runFileUtils;
   }
 
   /**
@@ -40,7 +37,7 @@ export default class LoggerFileProducer {
       const dirName = path.dirname(_filePath);
       const baseName = path.parse(_filePath).name;
 
-      const newPath = path.join( dirName, this.getPlaygroundFilePrefix(baseName) );
+      const newPath = path.join( dirName, this.runFilesUtils.getPlaygroundFilePrefix(baseName) );
 
       await projectDirectory.createFile(newPath, _fileData.modifiedFile);
     }
