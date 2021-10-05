@@ -26,6 +26,7 @@ export default class RunGenerator {
     this.repositoryFactory = repositoryFactory;
 
     this.runFilesUtils = runFilesUtils;
+
   }
 
   /**
@@ -108,13 +109,13 @@ export default class RunGenerator {
       const baseName = path.parse(importStringPath).name;
 
       if(dirName === '.'){
-        return `./${this.runFilesUtils.getPlaygroundFilePrefix(baseName)}`;
+        return `./${this.runFilesUtils.getPlaygroundFilePrexixWithoutExt(baseName)}`;
       }
 
-      return path.join(dirName, this.runFilesUtils.getPlaygroundFilePrefix(baseName));
+      return path.join(dirName, this.runFilesUtils.getPlaygroundFilePrexixWithoutExt(baseName));
     });
 
-    let modifiedFile = runTransformer.modifyProgram('dada');
+    let modifiedFile = await runTransformer.modifyProgram('dada');
     let replacedFile = runTransformer.getReplacedProgram(modifiedFile, 'dada');
 
     return {
@@ -253,9 +254,11 @@ export default class RunGenerator {
     await runServer.generateRunServer(project.path, fullPathToRun);
 
     // [7] RUN THE START SCRIPT
-    await runServer.startRunServer(project.path);
+    const collectedData = await runServer.startRunServer(project.path);
 
+    console.log('cd', collectedData);
 
+    return { fileData, executionTree, collectedData }
   }
 
 }

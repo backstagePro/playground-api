@@ -11,7 +11,8 @@ export default class TransformerFactory {
   public getTransformer(type: transformers, params: params) {
 
     if(type === 'logger'){
-      return new RunTransform(params.filePath);
+      let transformer = new RunTransform(params.filePath);
+      return transformer;
     }
     
     return null;

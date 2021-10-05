@@ -16,11 +16,11 @@ export default class RunService {
   }
 
   private getPathToModifiedRun(runPath){
-    
+
     const dirName = path.dirname(runPath);
     const baseName = path.parse(runPath).name;
 
-    const _pathToModifiedRun = path.join(dirName, `${baseName}`);
+    const _pathToModifiedRun = path.join(dirName,this.runFilesUtils.getPlaygroundFilePrexixWithoutExt(baseName));
     return _pathToModifiedRun;
   }
 
@@ -39,7 +39,7 @@ export default class RunService {
     const compiled = template(startScriptContent);
     const script = compiled({
       id: 'dada',
-      runFilePath
+      runFilePath: this.getPathToModifiedRun(runFilePath)
     });
 
     const projectDirectory = await directoryManager.getDirectory(projectDisPath);
@@ -54,39 +54,57 @@ export default class RunService {
    * 
    * @param projectDisPath 
    */
-  public async startRunServer(projectDisPath: string){
+  public async startRunServer(projectDisPath: string) {
+
+    let collectedData = [];
 
     let shell = await ServiceLocator
       .get<SERVICE_SHELL, SERVICE_SHELL_PARAMS>(SERVICE_SHELL, {
         command: './node_modules/.bin/ts-node'
       });
 
-    await new Promise((res, rej) => {
+    return await new Promise((res, rej) => {
       shell.execCommandAsStream([
         path.join(projectDisPath, 'start.__play__.ts')
       ], {}, {
         onStdoutData(data) {
-          debugger;
 
-          console.log(data.toString());
+          try {
+            const dataString: string = data.toString();
+            const strip = dataString.split(/\r?\n/);
+  
+  
+            strip.forEach((line) => {
+  
+              if((line as string).indexOf('[__$pl_data__]') > -1){
+  
+                console.log('s', line);
+                
+                let strip = line.replace('[__$pl_data__]', '').trim();
+                
+                console.log('strip', strip)
+    
+                collectedData.push(JSON.parse(strip));
+              }
+  
+            });
+          } catch(e){
+
+            console.log("Error while trying to parse the result:", e);
+            throw e;
+          }
         },
         onStderrData(data){
-          debugger;
-
-          console.log(data.toString());
         },
         onError(data){
-          debugger;
-          data;
         },
         onClose(code, signal){
-          debugger;
 
           if(code !== 0){
             return rej();
           }
-
-          res(void(0))
+          
+          res(collectedData);
         }
       })
     })

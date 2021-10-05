@@ -12,12 +12,14 @@ router.post('/run/start',  async (req: Request, res: Response, next: NextFunctio
 
         let runGenerator = await ServiceLocator.get<SERVICE_RUN_GENERATOR>(SERVICE_RUN_GENERATOR)
 
-        let fileMap = await runGenerator.startRunSession(runId);
+        let runData = await runGenerator.startRunSession(runId);
 
-        res.json({ fileMap: fileMap });
+        res.json({ runData: runData });
 
     } catch(e){
 
+        
+        console.error('error', e);
         next(e);
     }
 

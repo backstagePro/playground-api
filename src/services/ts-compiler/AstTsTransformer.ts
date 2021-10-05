@@ -10,7 +10,7 @@ export default class AstTsTransformer {
   
   private printer: ts.Printer;
   
-  private filePath: string;
+  protected filePath: string;
 
   constructor(  filePath  ){
 

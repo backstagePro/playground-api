@@ -1,4 +1,6 @@
 import ts from "typescript";
+import { SERVICE_ID_GENERATOR } from "../../services";
+import ServiceLocator from "../ServiceLocator";
 import AstTsTransformer from "./AstTsTransformer";
 
 /**
@@ -33,9 +35,11 @@ export default class RunTransform extends AstTsTransformer {
    * 
    * @returns 
    */
-  public modifyProgram(
+  public async modifyProgram(
     identifier: string
-  ) : string {
+  ) : Promise<string> {
+
+    const idGenerator = await ServiceLocator.get<SERVICE_ID_GENERATOR>(SERVICE_ID_GENERATOR);
 
     return this.trasform((node, context) => {
 
@@ -86,8 +90,12 @@ export default class RunTransform extends AstTsTransformer {
             [context.factory.createObjectLiteralExpression(
               [
                 context.factory.createPropertyAssignment(
-                  context.factory.createIdentifier("id"),
+                  context.factory.createIdentifier("variableName"),
                   context.factory.createStringLiteral(identNode.getText().trim())
+                ),
+                context.factory.createPropertyAssignment(
+                  context.factory.createIdentifier("id"),
+                  context.factory.createStringLiteral(idGenerator.generateId())
                 ),
                 context.factory.createPropertyAssignment(
                   context.factory.createIdentifier("val"),

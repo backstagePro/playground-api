@@ -43,4 +43,11 @@ export default class LoggerFileProducer {
     }
 
   }
+
+  /**
+   * Clean up all generated playground files
+   */
+  public cleanUpGeneratedFiles(){
+
+  }
 }
