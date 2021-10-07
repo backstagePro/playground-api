@@ -11,7 +11,7 @@ import RunGenerator from "./services/run/RunGenerator";
 import ShellService from "./services/ShellService";
 import RunServer from "./services/run-service/RunServer";
 import WebsocketServer from "./services/ws/WebsocketServer";
-import ExecutionTree from "./services/ExecutionTree";
+import FileImportTree from "./services/ExecutionTree";
 import LoggerFileProducer from "./services/LoggerFileProducer";
 import Config from "./services/Config";
 import RunFilesUtils from "./services/RunFilesUtils";
@@ -220,14 +220,14 @@ ServiceLocator.set(SERVICE_WEBSOCKET_SERVER, async () => {
  *
  */
 export let SERVICE_EXECUTION_TREE: 'SERVICE_EXECUTION_TREE' = 'SERVICE_EXECUTION_TREE';
-export type SERVICE_EXECUTION_TREE = ExecutionTree;
+export type SERVICE_EXECUTION_TREE = FileImportTree;
 export type SERVICE_EXECUTION_TREE_PARAMS = {
     projectPath: string;
 }
 
 ServiceLocator.set(SERVICE_EXECUTION_TREE, async (params: SERVICE_EXECUTION_TREE_PARAMS) => {
     
-    return new ExecutionTree(
+    return new FileImportTree(
         params.projectPath,
         (await ServiceLocator.get<SERVICE_TRANSFORMER_FACTORY>(SERVICE_TRANSFORMER_FACTORY))
     );

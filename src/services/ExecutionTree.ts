@@ -2,7 +2,7 @@ import path from 'path';
 import { IRunSessionExecTree } from "../model/entities/RunSession";
 import { SERVICE_TRANSFORMER_FACTORY } from "../services";
 
-export default class ExecutionTree {
+export default class FileImportTree {
 
   private transformerFactory: SERVICE_TRANSFORMER_FACTORY;
 
@@ -20,7 +20,7 @@ export default class ExecutionTree {
    * @param fullPathToRootFile -  this is the path to root ts file, 
    * from where the program start
    */
-   public async generateExecutionTree(
+   public async generateFileImportTree(
     fullPathToRootFile: string,
     jsonMap = {root: null, children: {}}
   ) : Promise<IRunSessionExecTree> {
@@ -55,7 +55,7 @@ export default class ExecutionTree {
       jsonMap.children[relativeServicePath].push(relativeProjectPath)
 
       // collect data for children files
-      await this.generateExecutionTree(fullImportPath, jsonMap);
+      await this.generateFileImportTree(fullImportPath, jsonMap);
     }
 
     return jsonMap;

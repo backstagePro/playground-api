@@ -82,7 +82,8 @@ export default class RunGenerator {
    * @param fullPathToRootFile - the path to the root ts file
    */
   public async createFileInfo(
-    filePath: string,
+    filePath: string,    // abs path
+    fileRelPath: string, // relative to project path
 
     options: {
       addLogs: boolean
@@ -115,7 +116,7 @@ export default class RunGenerator {
       return path.join(dirName, this.runFilesUtils.getPlaygroundFilePrexixWithoutExt(baseName));
     });
 
-    let modifiedFile = await runTransformer.modifyProgram('dada');
+    let modifiedFile = await runTransformer.modifyProgram('dada', fileRelPath);
     let replacedFile = runTransformer.getReplacedProgram(modifiedFile, 'dada');
 
     return {
@@ -136,7 +137,7 @@ export default class RunGenerator {
    * @param loggerFileProducer 
    * @returns 
    */
-  public async populateExecutionTree( 
+  public async populateFileImportTree( 
     tree: IRunSessionExecTree, 
     projectPath: string,
     runFilePath: string
@@ -161,6 +162,7 @@ export default class RunGenerator {
     let fullFilePathToRunFile = path.join(projectPath, runFilePath);
     fileData[runFilePath] = await this.createFileInfo(
       fullFilePathToRunFile,
+      runFilePath,
       { 
         addLogs: false
       }
@@ -168,7 +170,7 @@ export default class RunGenerator {
 
     for(let i = 0, len = allPaths.length; i < len; i += 1){
       let absFilePath = path.join(projectPath, allPaths[i]);
-      fileData[allPaths[i]] = await this.createFileInfo(absFilePath);
+      fileData[allPaths[i]] = await this.createFileInfo(absFilePath, allPaths[i]);
     }
 
     return fileData;
@@ -237,15 +239,15 @@ export default class RunGenerator {
      * Start the process of creating a new run session
      */
 
-    // [1] GENERATE EXECUTION TREE
-    const executionTree = await executionTreeService.generateExecutionTree( fullPathToService );
-    executionTree.root = path.relative(project.path, fullPathToService);
+    // [1] GENERATE FILE IMPORT TREE
+    const fileImportTree = await executionTreeService.generateFileImportTree( fullPathToService );
+    fileImportTree.root = path.relative(project.path, fullPathToService);
 
     // [2] CREATE A FILE DATA
-    const fileData = await this.populateExecutionTree(executionTree, project.path, artefact.path);
+    const fileData = await this.populateFileImportTree(fileImportTree, project.path, artefact.path);
 
     // [3] SAVE EXTRACTED DATA TO DATABASE
-    await this.saveRunSession(fileData, executionTree, project.path, artefact.path);
+    await this.saveRunSession(fileData, fileImportTree, project.path, artefact.path);
 
     // [5] GENERATE MODIFIED FILES
     await loggerFileProducer.createModifierFiles(fileData);
@@ -255,10 +257,8 @@ export default class RunGenerator {
 
     // [7] RUN THE START SCRIPT
     const collectedData = await runServer.startRunServer(project.path);
-
-    console.log('cd', collectedData);
-
-    return { fileData, executionTree, collectedData }
+    
+    return { fileData, fileImportTree, collectedData }
   }
 
 }

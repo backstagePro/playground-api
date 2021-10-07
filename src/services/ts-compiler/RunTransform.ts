@@ -36,7 +36,8 @@ export default class RunTransform extends AstTsTransformer {
    * @returns 
    */
   public async modifyProgram(
-    identifier: string
+    identifier: string,
+    fileRelPath: string, // path relative to project
   ) : Promise<string> {
 
     const idGenerator = await ServiceLocator.get<SERVICE_ID_GENERATOR>(SERVICE_ID_GENERATOR);
@@ -98,6 +99,10 @@ export default class RunTransform extends AstTsTransformer {
                   context.factory.createStringLiteral(idGenerator.generateId())
                 ),
                 context.factory.createPropertyAssignment(
+                  context.factory.createIdentifier("filePath"),
+                  context.factory.createStringLiteral(fileRelPath)
+                ),
+                context.factory.createPropertyAssignment(
                   context.factory.createIdentifier("val"),
                   context.factory.createIdentifier(identNode.getText().trim())
                 )
@@ -129,7 +134,7 @@ export default class RunTransform extends AstTsTransformer {
 
         const jsonData = b.substring(1, b.length-2);
 
-        const match = /id: "(.*)"/.exec(jsonData);
+        const match = /id: "(.*?)"/.exec(jsonData);
 
         return `<%= ${match[1]} %>`;
     })

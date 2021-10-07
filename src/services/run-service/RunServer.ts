@@ -56,7 +56,7 @@ export default class RunService {
    */
   public async startRunServer(projectDisPath: string) {
 
-    let collectedData = [];
+    let collectedData = {};
 
     let shell = await ServiceLocator
       .get<SERVICE_SHELL, SERVICE_SHELL_PARAMS>(SERVICE_SHELL, {
@@ -80,11 +80,13 @@ export default class RunService {
   
                 console.log('s', line);
                 
-                let strip = line.replace('[__$pl_data__]', '').trim();
+                let strip: any = line.replace('[__$pl_data__]', '').trim();
                 
                 console.log('strip', strip)
-    
-                collectedData.push(JSON.parse(strip));
+
+                let data = JSON.parse(strip);
+
+                collectedData[data.id] = data;
               }
   
             });
