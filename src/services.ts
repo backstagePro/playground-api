@@ -15,6 +15,7 @@ import FileImportTree from "./services/ExecutionTree";
 import LoggerFileProducer from "./services/LoggerFileProducer";
 import Config from "./services/Config";
 import RunFilesUtils from "./services/RunFilesUtils";
+import AstExtractor from "./services/ts-compiler/AstExtractor";
 
 /**
  * Service used for loading the project into the system.
@@ -276,3 +277,18 @@ ServiceLocator.set(SERVICE_RUN_FILES_UTILS, async () => {
     
     return new RunFilesUtils();
 });
+
+/**
+ * Used to extract information from ast of given typescript file
+ *
+ */
+ export let SERVICE_AST_EXTRACTOR: 'SERVICE_AST_EXTRACTOR' = 'SERVICE_AST_EXTRACTOR';
+ export type SERVICE_AST_EXTRACTOR = AstExtractor;
+ export type SERVICE_AST_EXTRACTOR_PARAMS = {
+    filePath: string;
+ }
+ 
+ ServiceLocator.set(SERVICE_AST_EXTRACTOR, async (params: SERVICE_AST_EXTRACTOR_PARAMS) => {
+     
+    return new AstExtractor(params.filePath);
+ }, { singleton: false });

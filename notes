@@ -1,0 +1,75 @@
+-> execution flow ->
+
+create stack []
+
+```
+{
+  id, filePath, functionName
+}
+```
+
+[ Debugger pointers ]
+
+1. show console log after initialize
+2. analyze which is the expression for which we get analyzed value from 1
+
+- if it is function -> get ref to function for this id ...
+- it it is expression, do not make anything
+
+DO NOT USE COUNTER TO MAKE ASSUMPTION ABOUT THE ORIGIN OF THE EXPRESSION BY THE POSITION OF THE COUNTER
+
+Two folders
+
+```
+let a = t.getValue(); // t is class
+
+// show data below for expression
+let a = test.bla();   // test is module here
+
+```
+
+CREATE A FILE PREVIEW FROM LINES
+{ line1 }
+{ line2 }
+
+```
+{
+  id: 'dadad',
+  val: a,
+  fileName: '',
+  identifier: 'a',
+  pos: { // REMOVE REGULAR EXPRESSION , USE POSITION WITH COLUMN AND LINE
+    line: <number>,
+    col: <number>
+  }
+  provider: { // COLLECT ALL identifiers
+    fileName: '',
+    pos: {
+      line: <number>,
+      pos: <number>
+    }
+  }
+}
+```
+
+TWO TYPES OF TRANSFORMERS
+-> modify code ->
+-> collect data ->
+
+IMPLEMENTATION
+
+Add class with options
+
+```
+class CodePointer {
+  public type = 'expression',
+
+  transformNode( ts.Node, {... compiler options, helper here })
+
+
+}
+```
+
+HELPER
+
+- collect all important statement...

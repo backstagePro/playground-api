@@ -1,6 +1,7 @@
 import path from 'path';
 import { IRunSessionExecTree } from "../model/entities/RunSession";
-import { SERVICE_TRANSFORMER_FACTORY } from "../services";
+import { SERVICE_AST_EXTRACTOR, SERVICE_AST_EXTRACTOR_PARAMS, SERVICE_EXECUTION_TREE_PARAMS, SERVICE_TRANSFORMER_FACTORY } from "../services";
+import ServiceLocator from './ServiceLocator';
 
 export default class FileImportTree {
 
@@ -25,11 +26,11 @@ export default class FileImportTree {
     jsonMap = {root: null, children: {}}
   ) : Promise<IRunSessionExecTree> {
 
-    let loggerTransformer = this.transformerFactory.getTransformer('logger', {
-      filePath: fullPathToRootFile
+    const astExtractor = await ServiceLocator.get<SERVICE_AST_EXTRACTOR, SERVICE_AST_EXTRACTOR_PARAMS>(SERVICE_AST_EXTRACTOR, {
+      filePath: fullPathToRootFile 
     });
 
-    let allImports: {path: string}[] = loggerTransformer.getAllImportStatement();
+    let allImports: {path: string}[] = astExtractor.getAllImportStatement();
 
     for(let i = 0, len = allImports.length; i < len; i += 1){
       let importPath = allImports[i];

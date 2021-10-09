@@ -84,40 +84,29 @@ export default class RunGenerator {
   public async createFileInfo(
     filePath: string,    // abs path
     fileRelPath: string, // relative to project path
-
-    options: {
-      addLogs: boolean
-    } = {
-      addLogs: true
-    }
   ){
 
     const runTransformer = this.transformerFactory.getTransformer('logger', {
       filePath: filePath
     });
 
-    if(options.addLogs){
-
-      runTransformer.setLogsModify();
-    }
-
-    runTransformer.setImportModify((importStringPath) => {
+    // runTransformer.setImportModify((importStringPath) => {
       
 
-      importStringPath = importStringPath.substring(1, importStringPath.length-1);
+    //   importStringPath = importStringPath.substring(1, importStringPath.length-1);
 
-      const dirName = path.dirname(importStringPath);
-      const baseName = path.parse(importStringPath).name;
+    //   const dirName = path.dirname(importStringPath);
+    //   const baseName = path.parse(importStringPath).name;
 
-      if(dirName === '.'){
-        return `./${this.runFilesUtils.getPlaygroundFilePrexixWithoutExt(baseName)}`;
-      }
+    //   if(dirName === '.'){
+    //     return `./${this.runFilesUtils.getPlaygroundFilePrexixWithoutExt(baseName)}`;
+    //   }
 
-      return path.join(dirName, this.runFilesUtils.getPlaygroundFilePrexixWithoutExt(baseName));
-    });
+    //   return path.join(dirName, this.runFilesUtils.getPlaygroundFilePrexixWithoutExt(baseName));
+    // });
 
-    let modifiedFile = await runTransformer.modifyProgram('dada', fileRelPath);
-    let replacedFile = runTransformer.getReplacedProgram(modifiedFile, 'dada');
+    const modifiedFile = await runTransformer.modifyProgram('dada', fileRelPath);
+    let replacedFile = modifiedFile; // runTransformer.getReplacedProgram(modifiedFile, 'dada');
 
     return {
       // will be run on the server
@@ -162,10 +151,7 @@ export default class RunGenerator {
     let fullFilePathToRunFile = path.join(projectPath, runFilePath);
     fileData[runFilePath] = await this.createFileInfo(
       fullFilePathToRunFile,
-      runFilePath,
-      { 
-        addLogs: false
-      }
+      runFilePath
     );
 
     for(let i = 0, len = allPaths.length; i < len; i += 1){
