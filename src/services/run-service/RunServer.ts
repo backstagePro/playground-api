@@ -77,8 +77,6 @@ export default class RunService {
             strip.forEach((line) => {
   
               if((line as string).indexOf('[__$pl_data__]') > -1){
-  
-                console.log('s', line);
                 
                 let strip: any = line.replace('[__$pl_data__]', '').trim();
                 

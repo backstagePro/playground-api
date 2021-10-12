@@ -59,6 +59,12 @@ export default class RunTransform extends AstTsTransformer {
 
           const fileFilter = transformer.getFileRegex();
   
+          console.log(`[REGEX TEST] Testing file " ${fileName} " for transforms with filter ${fileFilter} return ${fileFilter.test(fileName)}`);
+
+          if(fileFilter){
+            fileFilter.lastIndex = 0;
+          }
+
           // filter for which file to be applied transformer
           if(fileFilter === null || (fileFilter && fileFilter.test(fileName))){
 

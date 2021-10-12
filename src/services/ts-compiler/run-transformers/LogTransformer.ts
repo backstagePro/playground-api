@@ -12,6 +12,8 @@ export default class LogTransformer extends AbstractRunTransformer {
 
   public transform(node: ts.Node, ev: TransformEvent) {
 
+    console.log('[TRANSFORMS] Add logs for file:', ev.getFileName());
+
     const context = ev.getContext();
     
     const {line, character} = ev.getSourceFile().getLineAndCharacterOfPosition(node.getStart());

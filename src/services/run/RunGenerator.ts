@@ -127,12 +127,14 @@ export default class RunGenerator {
       allPaths.push(treeNode);
     });
 
+    // collect data only for the run file
     let fullFilePathToRunFile = path.join(projectPath, runFilePath);
     fileData[runFilePath] = await this.createFileInfo(
       fullFilePathToRunFile,
       runFilePath
     );
 
+    // collect data for all other imported files
     for(let i = 0, len = allPaths.length; i < len; i += 1){
       let absFilePath = path.join(projectPath, allPaths[i]);
       fileData[allPaths[i]] = await this.createFileInfo(absFilePath, allPaths[i]);

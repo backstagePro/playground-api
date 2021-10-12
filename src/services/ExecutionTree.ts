@@ -16,7 +16,7 @@ export default class FileImportTree {
   }
 
   /**
-   * Used to generate the `execution tree` structure
+   * Used to generate the `file import tree` structure
    * 
    * @param fullPathToRootFile -  this is the path to root ts file, 
    * from where the program start
@@ -62,6 +62,12 @@ export default class FileImportTree {
     return jsonMap;
   }
 
+  /**
+   * Iterate through all imported files
+   * 
+   * @param tree 
+   * @param cb 
+   */
   public iterateExecutionTree(tree: IRunSessionExecTree, cb: (treeNode) => void) {
     
     const recur = ( root ) => {

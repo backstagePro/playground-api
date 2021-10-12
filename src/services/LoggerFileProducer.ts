@@ -39,7 +39,6 @@ export default class LoggerFileProducer {
 
       const newPath = path.join( dirName, this.runFilesUtils.getPlaygroundFilePrefix(baseName) );
 
-      debugger;
       await projectDirectory.createFile(newPath, _fileData.modifiedFile);
     }
 

@@ -27,14 +27,14 @@ export default class ImportTransform extends AbstractRunTransformer {
     return false;
   };
 
-  public filterFileRegex = /^(.*(\.playground)).*$/m;
+  public filterFileRegex = /^.*$/m;
 
   public transform(node: ts.Node, ev: TransformEvent) {
 
+    console.log('[TRANSFORMS] Modify imports for file:', ev.getFileName() )
+
     const context = ev.getContext();
     const runFileUtils = ev.getRunFilesUtils();
-
-    debugger;
 
     let importStringPath = node.getText();
     importStringPath = importStringPath.substring(1, importStringPath.length-1);
