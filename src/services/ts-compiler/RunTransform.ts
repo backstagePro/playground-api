@@ -16,8 +16,6 @@ export default class RunTransform extends AstTsTransformer {
   constructor(filePath: string, transformers: AbstractRunTransformer[]){
     super(filePath);
 
-    console.log('filePath', filePath);
-
     this.transformers = transformers;
   }
 
@@ -31,6 +29,8 @@ export default class RunTransform extends AstTsTransformer {
     fileRelPath: string, // path relative to project
   ) : Promise<string> {
 
+    const idGenerator = await ServiceLocator.get<SERVICE_ID_GENERATOR>(SERVICE_ID_GENERATOR);
+
     return this.trasform((node, context) => {
 
       // @TODO - performance issues
@@ -41,11 +41,21 @@ export default class RunTransform extends AstTsTransformer {
         if(transformer.nodeTypeTest(node)){
 
           const fileFilter = transformer.getFileRegex();
+
+          const fileName = this.getFileName();
   
           // filter for which file to be applied transformer
-          if(fileFilter === null || (fileFilter && fileFilter.test(this.getFileName()))){
+          if(fileFilter === null || (fileFilter && fileFilter.test(fileName))){
 
-            let transformEvent = new TransformEvent({ context, node });
+            let transformEvent = new TransformEvent({ 
+              context, 
+              node,
+              fileName: fileName, 
+              relFilePath: fileRelPath,
+              sourceFile: this.getSourceFile(), 
+              idGenerator 
+            });
+
             return this.transformers[i].transform(node, transformEvent);
           }
 
@@ -57,8 +67,6 @@ export default class RunTransform extends AstTsTransformer {
       return node;
     }, {printProgram: true}) as string;
 
-
-    // const idGenerator = await ServiceLocator.get<SERVICE_ID_GENERATOR>(SERVICE_ID_GENERATOR);
 
     // return this.trasform((node, context) => {
 

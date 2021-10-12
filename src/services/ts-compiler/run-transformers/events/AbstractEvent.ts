@@ -1,7 +1,83 @@
 import ts from 'typescript';
+import { SERVICE_ID_GENERATOR } from '../../../../services';
 
 export default class AbstractEvent {
- 
+
+  /**
+   * The name of the file
+   */
+  protected fileName: string;
+
+  protected sourceFile: ts.SourceFile;
+
+  protected context: ts.TransformationContext;
+
+  protected node: ts.Node;
+
+  /**
+   * Relative path to file based on project path
+   */
+  protected relFilePath: string;
+
+  protected idGenerator: SERVICE_ID_GENERATOR;
+
+  constructor(
+    {
+      context, 
+      node,
+      sourceFile,
+      idGenerator,
+      relFilePath,
+      fileName
+    }:{ 
+      sourceFile: ts.SourceFile,
+      context:  ts.TransformationContext, 
+      node: ts.Node,
+      idGenerator: SERVICE_ID_GENERATOR,
+      relFilePath: string,
+      fileName: string
+    }
+  ){
+
+    this.sourceFile = sourceFile;
+
+    this.context = context;
+
+    this.node = node;
+
+    this.idGenerator = idGenerator;
+
+    this.relFilePath = relFilePath;
+
+    this.fileName = fileName;
+  }
+
+  public getSourceFile(): ts.SourceFile {
+    
+
+    return this.sourceFile;
+  }
+
+  public getGeneratorId(): SERVICE_ID_GENERATOR {
+
+    return this.idGenerator;
+  }
+
+  public getRelativeFilePath(): string {
+
+    return this.relFilePath;
+  }
+
+  public getFileName(): string {
+
+    return this.fileName;
+  }
+
+  public getContext(): ts.TransformationContext {
+
+    return this.context;
+  }
+
   /**
    * 
    * Find a parent node for which the predicate function returns `true`

@@ -24,7 +24,7 @@ export default abstract class AbstractRunTransformer {
    * @param node 
    * @param ev 
    */
-  abstract transform(node: ts.Node, ev: TransformEvent): ts.Node
+  abstract transform(node: ts.Node, ev: TransformEvent): ts.Node | ts.Node[]
 
   public getFileRegex(){
 

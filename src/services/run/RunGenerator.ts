@@ -225,25 +225,25 @@ export default class RunGenerator {
      * Start the process of creating a new run session
      */
 
-    // [1] GENERATE FILE IMPORT TREE
+    // GENERATE FILE IMPORT TREE
     const fileImportTree = await executionTreeService.generateFileImportTree( fullPathToService );
     fileImportTree.root = path.relative(project.path, fullPathToService);
 
-    // [2] CREATE A FILE DATA
+    // CREATE A FILE DATA
     const fileData = await this.populateFileImportTree(fileImportTree, project.path, artefact.path);
 
-    // [3] SAVE EXTRACTED DATA TO DATABASE
-    await this.saveRunSession(fileData, fileImportTree, project.path, artefact.path);
-
-    // [5] GENERATE MODIFIED FILES
+    // GENERATE MODIFIED FILES
     await loggerFileProducer.createModifierFiles(fileData);
 
-    // [6] GENERATE START SCRIPT
+    // GENERATE START SCRIPT
     await runServer.generateRunServer(project.path, fullPathToRun);
 
-    // [7] RUN THE START SCRIPT
+    // RUN THE START SCRIPT
     const collectedData = await runServer.startRunServer(project.path);
-    
+
+    // SAVE EXTRACTED DATA TO DATABASE
+    await this.saveRunSession(fileData, fileImportTree, project.path, artefact.path);
+   
     return { fileData, fileImportTree, collectedData }
   }
 
