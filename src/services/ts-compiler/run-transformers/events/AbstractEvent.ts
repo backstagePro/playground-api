@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { SERVICE_ID_GENERATOR } from '../../../../services';
+import { SERVICE_ID_GENERATOR, SERVICE_RUN_FILES_UTILS } from '../../../../services';
 
 export default class AbstractEvent {
 
@@ -21,18 +21,22 @@ export default class AbstractEvent {
 
   protected idGenerator: SERVICE_ID_GENERATOR;
 
+  protected runFilesUtils: SERVICE_RUN_FILES_UTILS;
+
   constructor(
     {
       context, 
       node,
       sourceFile,
       idGenerator,
+      runFileUtils,
       relFilePath,
       fileName
     }:{ 
       sourceFile: ts.SourceFile,
       context:  ts.TransformationContext, 
       node: ts.Node,
+      runFileUtils: SERVICE_RUN_FILES_UTILS,
       idGenerator: SERVICE_ID_GENERATOR,
       relFilePath: string,
       fileName: string
@@ -46,6 +50,8 @@ export default class AbstractEvent {
     this.node = node;
 
     this.idGenerator = idGenerator;
+
+    this.runFilesUtils = runFileUtils;
 
     this.relFilePath = relFilePath;
 
@@ -61,6 +67,11 @@ export default class AbstractEvent {
   public getGeneratorId(): SERVICE_ID_GENERATOR {
 
     return this.idGenerator;
+  }
+
+  public getRunFilesUtils(): SERVICE_RUN_FILES_UTILS {
+
+    return this.runFilesUtils;
   }
 
   public getRelativeFilePath(): string {

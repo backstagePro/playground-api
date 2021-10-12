@@ -13,20 +13,14 @@ export default class RunGenerator {
 
   private transformerFactory: SERVICE_TRANSFORMER_FACTORY;
 
-  private runFilesUtils: SERVICE_RUN_FILES_UTILS;
-
   constructor( 
     transofrmerFactory: SERVICE_TRANSFORMER_FACTORY,
-    repositoryFactory: SERVICE_REPOSITORY_FACTORY,
-    runFilesUtils: SERVICE_RUN_FILES_UTILS
+    repositoryFactory: SERVICE_REPOSITORY_FACTORY
   ){
 
     this.transformerFactory = transofrmerFactory;
 
     this.repositoryFactory = repositoryFactory;
-
-    this.runFilesUtils = runFilesUtils;
-
   }
 
   /**
@@ -90,23 +84,8 @@ export default class RunGenerator {
       filePath: filePath
     });
 
-    // runTransformer.setImportModify((importStringPath) => {
-      
-
-    //   importStringPath = importStringPath.substring(1, importStringPath.length-1);
-
-    //   const dirName = path.dirname(importStringPath);
-    //   const baseName = path.parse(importStringPath).name;
-
-    //   if(dirName === '.'){
-    //     return `./${this.runFilesUtils.getPlaygroundFilePrexixWithoutExt(baseName)}`;
-    //   }
-
-    //   return path.join(dirName, this.runFilesUtils.getPlaygroundFilePrexixWithoutExt(baseName));
-    // });
-
-    const modifiedFile = await runTransformer.modifyProgram('dada', fileRelPath);
-    let replacedFile = modifiedFile; // runTransformer.getReplacedProgram(modifiedFile, 'dada');
+    const modifiedFile = await runTransformer.modifyProgram('', fileRelPath);
+    let replacedFile = runTransformer.getReplacedProgram(modifiedFile, '');
 
     return {
       // will be run on the server

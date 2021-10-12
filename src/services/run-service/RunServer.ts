@@ -38,7 +38,7 @@ export default class RunService {
     const startScriptContent = await directory.readFile('start.__play__.ts');
     const compiled = template(startScriptContent);
     const script = compiled({
-      id: 'dada',
+      id: '',
       runFilePath: this.getPathToModifiedRun(runFilePath)
     });
 
@@ -97,13 +97,17 @@ export default class RunService {
           }
         },
         onStderrData(data){
+
+          console.log('Error while starting the server', data.toString());
         },
         onError(data){
+
+          console.log('Error while starting the server', data);
         },
         onClose(code, signal){
 
           if(code !== 0){
-            return rej();
+            return rej(`Error while starting the server. Program exit with code ` + code);
           }
           
           res(collectedData);

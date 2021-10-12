@@ -9,7 +9,7 @@ export default abstract class AbstractRunTransformer {
   /**
    * Specify what type of ts.Node will be processed by this class 
    */
-  abstract nodeTypeTest: Function;
+  abstract nodeTypeTest: (node: ts.Node, ev: TransformEvent) => boolean;
 
   /**
    * Specify the token from what file name should be processed
@@ -22,9 +22,11 @@ export default abstract class AbstractRunTransformer {
    * Function used to process the node
    * 
    * @param node 
-   * @param ev 
+   * @param ev
+   * 
+   * @returns modified node 
    */
-  abstract transform(node: ts.Node, ev: TransformEvent): ts.Node | ts.Node[]
+  abstract transform(node: ts.Node, ev: TransformEvent): any
 
   public getFileRegex(){
 

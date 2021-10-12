@@ -168,8 +168,7 @@ ServiceLocator.set(SERVICE_RUN_GENERATOR, async () => {
     
     return new RunGenerator(
         (await ServiceLocator.get<SERVICE_TRANSFORMER_FACTORY>(SERVICE_TRANSFORMER_FACTORY)),
-        (await ServiceLocator.get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY)),
-        (await ServiceLocator.get<SERVICE_RUN_FILES_UTILS>(SERVICE_RUN_FILES_UTILS))
+        (await ServiceLocator.get<SERVICE_REPOSITORY_FACTORY>(SERVICE_REPOSITORY_FACTORY))
     );
 });
 
