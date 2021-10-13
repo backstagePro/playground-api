@@ -3,6 +3,9 @@ import path from 'path';
 import AbstractRunTransformer, { IDENTIFIER_NODE_TYPE } from "./abstract/AbstractRunTransformer";
 import TransformEvent from "./events/TransformEvent";
 
+/**
+ * Modify the import path to import the '__play__.ts' files
+ */
 export default class ImportTransform extends AbstractRunTransformer {
 
   public nodeTypeTest = (node: ts.Node, ev: TransformEvent) => {

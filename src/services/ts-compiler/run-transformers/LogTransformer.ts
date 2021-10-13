@@ -2,6 +2,11 @@ import ts from "typescript";
 import AbstractRunTransformer, { IDENTIFIER_NODE_TYPE } from "./abstract/AbstractRunTransformer";
 import TransformEvent from "./events/TransformEvent";
 
+
+/**
+ * 
+ * Add logs for all declaration in files
+ */
 export default class LogTransformer extends AbstractRunTransformer {
 
   public nodeTypeTest = (node: ts.Node, ev: TransformEvent) => {
@@ -16,7 +21,7 @@ export default class LogTransformer extends AbstractRunTransformer {
 
     const context = ev.getContext();
     
-    const {line, character} = ev.getSourceFile().getLineAndCharacterOfPosition(node.getStart());
+    const {line} = ev.getSourceFile().getLineAndCharacterOfPosition(node.getStart());
 
     const relFilePath = ev.getRelativeFilePath();
 

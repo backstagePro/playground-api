@@ -170,6 +170,24 @@ export default class RunGenerator {
     return runSessionId;
   }
 
+  /**
+   * Create a list of all files in which the execution of the code moves in
+   */
+  private buildFileExecList( collectedData ){
+
+    let fileList = [];
+
+    Object.keys(collectedData).forEach((key) => {
+      let filePath = collectedData[key].filePath;
+
+      if(fileList.indexOf(filePath) === -1){
+        fileList.push(filePath);
+      }
+    })
+
+    return fileList;
+  }
+
   public async startRunSession(runId: string) {
 
     // get entities
@@ -224,8 +242,10 @@ export default class RunGenerator {
 
     // SAVE EXTRACTED DATA TO DATABASE
     await this.saveRunSession(fileData, fileImportTree, project.path, artefact.path);
+
+    const fileExecList = this.buildFileExecList(collectedData);
    
-    return { fileData, fileImportTree, collectedData }
+    return { fileData, fileImportTree, fileExecList, collectedData }
   }
 
 }
