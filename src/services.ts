@@ -16,6 +16,7 @@ import LoggerFileProducer from "./services/LoggerFileProducer";
 import Config from "./services/Config";
 import RunFilesUtils from "./services/RunFilesUtils";
 import AstExtractor from "./services/ts-compiler/AstExtractor";
+import WatchFiles from "./services/WatchFiles";
 
 /**
  * Service used for loading the project into the system.
@@ -281,13 +282,28 @@ ServiceLocator.set(SERVICE_RUN_FILES_UTILS, async () => {
  * Used to extract information from ast of given typescript file
  *
  */
- export let SERVICE_AST_EXTRACTOR: 'SERVICE_AST_EXTRACTOR' = 'SERVICE_AST_EXTRACTOR';
- export type SERVICE_AST_EXTRACTOR = AstExtractor;
- export type SERVICE_AST_EXTRACTOR_PARAMS = {
-    filePath: string;
- }
- 
- ServiceLocator.set(SERVICE_AST_EXTRACTOR, async (params: SERVICE_AST_EXTRACTOR_PARAMS) => {
+export let SERVICE_AST_EXTRACTOR: 'SERVICE_AST_EXTRACTOR' = 'SERVICE_AST_EXTRACTOR';
+export type SERVICE_AST_EXTRACTOR = AstExtractor;
+export type SERVICE_AST_EXTRACTOR_PARAMS = {
+filePath: string;
+}
+
+ServiceLocator.set(SERVICE_AST_EXTRACTOR, async (params: SERVICE_AST_EXTRACTOR_PARAMS) => {
+    
+return new AstExtractor(params.filePath);
+}, { singleton: false });
+
+
+/**
+ * Watching files for changes
+ *
+ */
+export let SERVICE_WATCH_FILES: 'SERVICE_WATCH_FILES' = 'SERVICE_WATCH_FILES';
+export type SERVICE_WATCH_FILES = WatchFiles;
+
+
+ServiceLocator.set(SERVICE_WATCH_FILES, async () => {
      
-    return new AstExtractor(params.filePath);
- }, { singleton: false });
+   return new WatchFiles();
+});
+ 

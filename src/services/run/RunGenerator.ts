@@ -2,7 +2,7 @@
 import { IArtefact } from "../../model/entities/Artefact";
 import { IProject } from "../../model/entities/Project";
 import { IRun } from "../../model/entities/Run";
-import { SERVICE_EXECUTION_TREE, SERVICE_EXECUTION_TREE_PARAMS, SERVICE_LOGGER_FILE_PRODUCER, SERVICE_LOGGER_FILE_PRODUCER_PARAMS, SERVICE_REPOSITORY_FACTORY, SERVICE_RUN_FILES_UTILS, SERVICE_RUN_GENERATOR, SERVICE_RUN_SERVER, SERVICE_SHELL, SERVICE_SHELL_PARAMS, SERVICE_TRANSFORMER_FACTORY } from "../../services";
+import { SERVICE_EXECUTION_TREE, SERVICE_EXECUTION_TREE_PARAMS, SERVICE_LOGGER_FILE_PRODUCER, SERVICE_LOGGER_FILE_PRODUCER_PARAMS, SERVICE_REPOSITORY_FACTORY, SERVICE_RUN_FILES_UTILS, SERVICE_RUN_GENERATOR, SERVICE_RUN_SERVER, SERVICE_SHELL, SERVICE_SHELL_PARAMS, SERVICE_TRANSFORMER_FACTORY, SERVICE_WATCH_FILES } from "../../services";
 import path from 'path';
 import ServiceLocator from "../ServiceLocator";
 import RunSession, { IRunSessionExecTree, IRunSessionFileData } from "../../model/entities/RunSession";
@@ -240,11 +240,15 @@ export default class RunGenerator {
     // RUN THE START SCRIPT
     const collectedData = await runServer.startRunServer(project.path);
 
+    // GET LIST OF FILES IN WHICH THE EXECUTION GOES
+    const fileExecList = this.buildFileExecList(collectedData);
+
+    // START LISTENING FOR CHANGES
+    await (await ServiceLocator.get<SERVICE_WATCH_FILES>(SERVICE_WATCH_FILES)).startWather(project.path);
+
     // SAVE EXTRACTED DATA TO DATABASE
     await this.saveRunSession(fileData, fileImportTree, project.path, artefact.path);
 
-    const fileExecList = this.buildFileExecList(collectedData);
-   
     return { fileData, fileImportTree, fileExecList, collectedData }
   }
 

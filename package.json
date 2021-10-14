@@ -29,6 +29,7 @@
   "homepage": "https://github.com/backstagePro/playground-api#readme",
   "dependencies": {
     "@types/lodash": "^4.14.175",
+    "chokidar": "^3.5.2",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "fast-glob": "^3.2.7",
